@@ -8,10 +8,6 @@ import java.util.UUID
 class FolderRepository(context: Context) {
     private val prefs = context.getSharedPreferences("shortcut_store", Context.MODE_PRIVATE)
 
-    init {
-        resetDataForCurrentBuildIfNeeded()
-    }
-
     fun getAllFolders(): List<FolderItem> {
         val raw = prefs.getString(KEY_FOLDERS, null)
         if (raw.isNullOrBlank()) {
@@ -273,18 +269,6 @@ class FolderRepository(context: Context) {
     companion object {
         private const val KEY_FOLDERS = "folders"
         private const val KEY_SHORTCUTS = "shortcuts"
-        private const val KEY_RESET_VERSION = "reset_version"
-        private const val CURRENT_RESET_VERSION = 1
-    }
-
-    private fun resetDataForCurrentBuildIfNeeded() {
-        val appliedVersion = prefs.getInt(KEY_RESET_VERSION, 0)
-        if (appliedVersion >= CURRENT_RESET_VERSION) return
-        prefs.edit()
-            .remove(KEY_FOLDERS)
-            .remove(KEY_SHORTCUTS)
-            .putInt(KEY_RESET_VERSION, CURRENT_RESET_VERSION)
-            .apply()
     }
 }
 
