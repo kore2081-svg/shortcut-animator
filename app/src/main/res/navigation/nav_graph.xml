@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/folderListFragment">
+
+    <fragment
+        android:id="@+id/folderListFragment"
+        android:name="com.kore2.shortcutime.ui.list.FolderListFragment"
+        android:label="FolderList"
+        tools:layout="@layout/fragment_folder_list"
+        xmlns:tools="http://schemas.android.com/tools">
+        <action
+            android:id="@+id/action_folderList_to_folderDetail"
+            app:destination="@id/folderDetailFragment" />
+        <action
+            android:id="@+id/action_folderList_to_folderEditor"
+            app:destination="@id/folderEditorActivity" />
+        <action
+            android:id="@+id/action_folderList_to_settings"
+            app:destination="@id/settingsActivity" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/folderDetailFragment"
+        android:name="com.kore2.shortcutime.ui.detail.FolderDetailFragment"
+        android:label="FolderDetail"
+        tools:layout="@layout/fragment_folder_detail"
+        xmlns:tools="http://schemas.android.com/tools">
+        <argument
+            android:name="folderId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_folderDetail_to_shortcutEditor"
+            app:destination="@id/shortcutEditorActivity" />
+        <action
+            android:id="@+id/action_folderDetail_to_folderEditor"
+            app:destination="@id/folderEditorActivity" />
+    </fragment>
+
+    <activity
+        android:id="@+id/folderEditorActivity"
+        android:name="com.kore2.shortcutime.ui.FolderEditorActivity"
+        android:label="FolderEditor">
+        <argument
+            android:name="folderId"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </activity>
+
+    <activity
+        android:id="@+id/shortcutEditorActivity"
+        android:name="com.kore2.shortcutime.ui.ShortcutEditorActivity"
+        android:label="ShortcutEditor">
+        <argument
+            android:name="folderId"
+            app:argType="string" />
+        <argument
+            android:name="shortcutId"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </activity>
+
+    <activity
+        android:id="@+id/settingsActivity"
+        android:name="com.kore2.shortcutime.ui.SettingsActivity"
+        android:label="Settings" />
+</navigation>
