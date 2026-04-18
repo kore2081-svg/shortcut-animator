@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_app">#181C2B</color>
+    <color name="bg_panel">#23283C</color>
+    <color name="bg_key">#31374F</color>
+    <color name="bg_key_active">#D6FF49</color>
+    <color name="text_primary">#F5F7FF</color>
+    <color name="text_secondary">#A9B2D0</color>
+    <color name="stroke_panel">#3B4465</color>
+    <color name="accent_blue">#7ED2FF</color>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="ShortcutImePanel">
+        <item name="android:background">@drawable/panel_bg</item>
+        <item name="android:padding">16dp</item>
+    </style>
+</resources>
