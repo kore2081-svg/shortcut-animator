@@ -67,7 +67,9 @@
             android:defaultValue="@null" />
         <action
             android:id="@+id/action_shortcutEditor_self"
-            app:destination="@id/shortcutEditorFragment" />
+            app:destination="@id/shortcutEditorFragment"
+            app:popUpTo="@id/shortcutEditorFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment

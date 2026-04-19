@@ -29,7 +29,7 @@
             </intent-filter>
 
             <meta-data
-                android:name="android.view.im"
+                android:name="android.view.im.InputMethod"
                 android:resource="@xml/method" />
         </service>
     </application>
