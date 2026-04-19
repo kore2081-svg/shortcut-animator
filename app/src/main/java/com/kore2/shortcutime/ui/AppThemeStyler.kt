@@ -6,8 +6,8 @@ import android.view.View
 import android.widget.TextView
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
+import androidx.appcompat.widget.SwitchCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.kore2.shortcutime.data.KeyboardThemePalette
@@ -53,7 +53,7 @@ internal fun applyInputLayoutTheme(
     editText?.setHintTextColor(theme.textSecondary)
 }
 
-internal fun applySwitchTheme(toggle: MaterialSwitch, theme: KeyboardThemePalette) {
+internal fun applySwitchTheme(toggle: SwitchCompat, theme: KeyboardThemePalette) {
     toggle.setTextColor(theme.textPrimary)
     toggle.thumbTintList = ColorStateList.valueOf(theme.accentColor)
     toggle.trackTintList = ColorStateList.valueOf(theme.keyBackground)

@@ -188,20 +188,24 @@
             android:textColor="@color/text_primary"
             android:textStyle="bold" />
 
-        <com.google.android.material.materialswitch.MaterialSwitch
+        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/backspaceUndoSwitch"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:showText="false"
+            android:textOff=""
+            android:textOn=""
             android:text="@string/label_backspace_undo" />
 
-        <com.google.android.material.materialswitch.MaterialSwitch
+        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/caseSensitiveSwitch"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:showText="false"
+            android:textOff=""
+            android:textOn=""
             android:text="@string/label_case_sensitive" />
 
         <com.google.android.material.textfield.TextInputLayout
