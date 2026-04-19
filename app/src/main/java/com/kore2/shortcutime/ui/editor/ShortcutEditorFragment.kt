@@ -296,6 +296,11 @@ class ShortcutEditorFragment : Fragment() {
                 binding.expandsToInputLayout.error = null
                 findNavController().popBackStack()
             }
+            ShortcutEditorViewModel.SaveResult.Error -> {
+                com.google.android.material.snackbar.Snackbar
+                    .make(binding.root, R.string.snack_save_error, com.google.android.material.snackbar.Snackbar.LENGTH_SHORT)
+                    .show()
+            }
         }
     }
 

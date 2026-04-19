@@ -128,6 +128,7 @@
     <string name="api_key_confirm_delete_message">%1$s 의 API 키를 삭제할까요?</string>
 
     <string name="snack_saved">저장되었습니다</string>
+    <string name="snack_save_error">저장 중 오류가 발생했습니다</string>
     <string name="snack_key_invalid">키가 올바르지 않습니다</string>
     <string name="snack_network">인터넷 연결 확인</string>
     <string name="snack_timeout">응답 지연. 재시도</string>

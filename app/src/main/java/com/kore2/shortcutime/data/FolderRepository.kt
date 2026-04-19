@@ -9,11 +9,13 @@ class FolderRepository(context: Context) {
     private val prefs = context.getSharedPreferences("shortcut_store", Context.MODE_PRIVATE)
 
     fun getAllFolders(): List<FolderItem> {
-        val raw = prefs.getString(KEY_FOLDERS, null)
-        if (raw.isNullOrBlank()) {
-            return migrateLegacyShortcutsIfNeeded()
+        return try {
+            val raw = prefs.getString(KEY_FOLDERS, null)
+            if (raw.isNullOrBlank()) migrateLegacyShortcutsIfNeeded()
+            else parseFolders(JSONArray(raw)).sortedBy { it.title.lowercase() }
+        } catch (e: Exception) {
+            emptyList()
         }
-        return parseFolders(JSONArray(raw)).sortedBy { it.title.lowercase() }
     }
 
     fun getFolder(folderId: String): FolderItem? {
@@ -219,11 +221,13 @@ class FolderRepository(context: Context) {
     }
 
     private fun writeFolders(folders: List<FolderItem>) {
-        val array = JSONArray()
-        folders.forEach { folder ->
-            array.put(folder.toJson())
+        try {
+            val array = JSONArray()
+            folders.forEach { folder -> array.put(folder.toJson()) }
+            prefs.edit().putString(KEY_FOLDERS, array.toString()).apply()
+        } catch (e: Exception) {
+            // Silently skip write on serialization error to avoid corrupting stored data
         }
-        prefs.edit().putString(KEY_FOLDERS, array.toString()).apply()
     }
 
     private fun parseFolders(array: JSONArray): List<FolderItem> {

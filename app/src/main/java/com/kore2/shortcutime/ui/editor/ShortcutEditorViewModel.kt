@@ -53,7 +53,7 @@ class ShortcutEditorViewModel(
         viewModelScope.launch {
             val folder = repository.getFolder(folderId)
             if (folder == null) { _folderMissing.value = true; return@launch }
-            _savedShortcuts.value = folder.shortcuts
+            _savedShortcuts.value = folder.shortcuts.filterNot { it.id == shortcutId }
             val current = shortcutId?.let { id -> folder.shortcuts.firstOrNull { it.id == id } }
             _entry.value = current
             _workingExamples.value = current?.examples.orEmpty()
@@ -63,7 +63,7 @@ class ShortcutEditorViewModel(
     fun refreshSavedShortcuts() {
         viewModelScope.launch {
             val folder = repository.getFolder(folderId) ?: return@launch
-            _savedShortcuts.value = folder.shortcuts
+            _savedShortcuts.value = folder.shortcuts.filterNot { it.id == shortcutId }
         }
     }
 
@@ -159,11 +159,15 @@ class ShortcutEditorViewModel(
 
     private fun autoSave() {
         val entry = _entry.value ?: return
-        val updated = entry.copy(
-            examples = _workingExamples.value,
-            updatedAt = System.currentTimeMillis(),
-        )
-        repository.updateShortcut(folderId, updated)
+        try {
+            val updated = entry.copy(
+                examples = _workingExamples.value,
+                updatedAt = System.currentTimeMillis(),
+            )
+            repository.updateShortcut(folderId, updated)
+        } catch (e: Exception) {
+            // Ignore autoSave failures — user-initiated save still works
+        }
     }
 
     fun save(
@@ -172,34 +176,42 @@ class ShortcutEditorViewModel(
     ): SaveResult {
         if (shortcut.isBlank()) return SaveResult.MissingShortcut
         if (expandsTo.isBlank()) return SaveResult.MissingExpandsTo
-        val current = _entry.value
-        val updated = if (current == null) {
-            ShortcutEntry(
-                shortcut = shortcut, expandsTo = expandsTo,
-                examples = _workingExamples.value, note = note,
-                caseSensitive = caseSensitive, backspaceToUndo = backspaceToUndo,
-            )
-        } else {
-            current.copy(
-                shortcut = shortcut, expandsTo = expandsTo,
-                examples = _workingExamples.value, note = note,
-                caseSensitive = caseSensitive, backspaceToUndo = backspaceToUndo,
-                updatedAt = System.currentTimeMillis(),
-            )
+        return try {
+            val current = _entry.value
+            val updated = if (current == null) {
+                ShortcutEntry(
+                    shortcut = shortcut, expandsTo = expandsTo,
+                    examples = _workingExamples.value, note = note,
+                    caseSensitive = caseSensitive, backspaceToUndo = backspaceToUndo,
+                )
+            } else {
+                current.copy(
+                    shortcut = shortcut, expandsTo = expandsTo,
+                    examples = _workingExamples.value, note = note,
+                    caseSensitive = caseSensitive, backspaceToUndo = backspaceToUndo,
+                    updatedAt = System.currentTimeMillis(),
+                )
+            }
+            if (current == null) repository.addShortcut(folderId, updated)
+            else repository.updateShortcut(folderId, updated)
+            SaveResult.Success
+        } catch (e: Exception) {
+            SaveResult.Error
         }
-        if (current == null) repository.addShortcut(folderId, updated) else repository.updateShortcut(folderId, updated)
-        return SaveResult.Success
     }
 
     fun deleteShortcut(id: String) {
-        repository.deleteShortcut(folderId, id)
-        refreshSavedShortcuts()
+        viewModelScope.launch {
+            repository.deleteShortcut(folderId, id)
+            refreshSavedShortcuts()
+        }
     }
 
     sealed class SaveResult {
         data object Success : SaveResult()
         data object MissingShortcut : SaveResult()
         data object MissingExpandsTo : SaveResult()
+        data object Error : SaveResult()
     }
 
     sealed class EditorEvent {

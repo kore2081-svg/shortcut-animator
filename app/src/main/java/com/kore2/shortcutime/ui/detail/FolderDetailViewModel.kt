@@ -33,8 +33,10 @@ class FolderDetailViewModel(
     }
 
     fun deleteShortcut(shortcutId: String) {
-        repository.deleteShortcut(folderId, shortcutId)
-        refresh()
+        viewModelScope.launch {
+            repository.deleteShortcut(folderId, shortcutId)
+            refresh()
+        }
     }
 
     companion object {
