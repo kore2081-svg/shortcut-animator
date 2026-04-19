@@ -29,7 +29,6 @@ import com.kore2.shortcutime.ui.ShortcutAdapter
 import com.kore2.shortcutime.ui.applyBodyTextTheme
 import com.kore2.shortcutime.ui.applyFilledButtonTheme
 import com.kore2.shortcutime.ui.applyInputLayoutTheme
-import com.kore2.shortcutime.ui.applySwitchTheme
 import com.kore2.shortcutime.ui.applyToolbarTheme
 import com.kore2.shortcutime.ui.roundedRectDrawable
 import kotlinx.coroutines.launch
@@ -176,11 +175,6 @@ class ShortcutEditorFragment : Fragment() {
         if (binding.expandsToInput.text?.toString() != entry.expandsTo) {
             binding.expandsToInput.setText(entry.expandsTo)
         }
-        if (binding.noteInput.text?.toString() != entry.note) {
-            binding.noteInput.setText(entry.note)
-        }
-        binding.caseSensitiveSwitch.isChecked = entry.caseSensitive
-        binding.backspaceUndoSwitch.isChecked = entry.backspaceToUndo
     }
 
     private fun setupGenerateCountButtons() {
@@ -216,7 +210,6 @@ class ShortcutEditorFragment : Fragment() {
         applyToolbarTheme(binding.topToolbar, theme)
         applyInputLayoutTheme(binding.shortcutInputLayout, binding.shortcutInput, theme)
         applyInputLayoutTheme(binding.expandsToInputLayout, binding.expandsToInput, theme)
-        applyInputLayoutTheme(binding.noteInputLayout, binding.noteInput, theme)
         binding.previewCard.background =
             roundedRectDrawable(theme.previewBackground, theme.strokeColor, 18f, binding.previewCard)
         binding.previewTitle.setTextColor(theme.textPrimary)
@@ -226,15 +219,12 @@ class ShortcutEditorFragment : Fragment() {
         binding.colemakPreview.applyTheme(theme)
         applyBodyTextTheme(binding.examplesTitle, theme, emphasize = true)
         applyBodyTextTheme(binding.exampleCountText, theme)
-        applyBodyTextTheme(binding.keywordSettingsTitle, theme, emphasize = true)
         applyFilledButtonTheme(binding.addExampleButton, theme)
         applyFilledButtonTheme(binding.generateOneButton, theme)
         applyFilledButtonTheme(binding.generateThreeButton, theme)
         applyFilledButtonTheme(binding.generateFiveButton, theme)
         applyFilledButtonTheme(binding.generateExamplesButton, theme)
         applyFilledButtonTheme(binding.saveButton, theme)
-        applySwitchTheme(binding.backspaceUndoSwitch, theme)
-        applySwitchTheme(binding.caseSensitiveSwitch, theme)
     }
 
     private fun schedulePreview(raw: String) {
@@ -286,13 +276,12 @@ class ShortcutEditorFragment : Fragment() {
     private fun onSaveClick() {
         val shortcut = binding.shortcutInput.text?.toString().orEmpty().trim()
         val expandsTo = binding.expandsToInput.text?.toString().orEmpty().trim()
-        val note = binding.noteInput.text?.toString().orEmpty().trim()
         val result = viewModel.save(
             shortcut = shortcut,
             expandsTo = expandsTo,
-            note = note,
-            caseSensitive = binding.caseSensitiveSwitch.isChecked,
-            backspaceToUndo = binding.backspaceUndoSwitch.isChecked,
+            note = "",
+            caseSensitive = false,
+            backspaceToUndo = false,
         )
         when (result) {
             ShortcutEditorViewModel.SaveResult.MissingShortcut -> {
