@@ -99,4 +99,53 @@
     <string name="folder_not_found">폴더를 찾을 수 없습니다.</string>
     <string name="phase2_feature_not_ready">예문 자동 생성은 다음 업데이트에서 지원돼요.</string>
     <string name="usage_badge_format">사용 %1$s</string>
+    <!-- Phase 2 LLM settings -->
+    <string name="settings_ai_row">AI 설정</string>
+    <string name="llm_settings_title">AI 설정</string>
+    <string name="llm_api_keys_title">API 키</string>
+    <string name="llm_active_provider_title">활성 공급자</string>
+    <string name="llm_model_title">모델</string>
+    <string name="llm_daily_cap_title">하루 호출 한도</string>
+    <string name="llm_daily_cap_format">%1$d 회 / 일</string>
+    <string name="llm_today_usage_format">오늘 사용: %1$d / %2$d</string>
+    <string name="llm_no_keys_hint">먼저 API 키를 저장하세요</string>
+    <string name="llm_provider_openai">OpenAI</string>
+    <string name="llm_provider_claude">Anthropic Claude</string>
+    <string name="llm_provider_gemini">Google Gemini</string>
+    <string name="llm_provider_grok">xAI Grok</string>
+    <string name="llm_provider_deepseek">DeepSeek</string>
+    <string name="llm_key_status_saved">저장됨</string>
+    <string name="llm_key_status_missing">미설정</string>
+    <string name="llm_recommended_badge">추천</string>
+
+    <string name="api_key_dialog_title_format">%1$s API 키</string>
+    <string name="api_key_get_link">API 키 발급받기 ↗</string>
+    <string name="api_key_input_hint">API 키 입력</string>
+    <string name="api_key_status_validating">검증 중…</string>
+    <string name="api_key_status_saved_format">저장됨 (%1$s)</string>
+    <string name="api_key_action_test_save">테스트 &amp; 저장</string>
+    <string name="api_key_action_delete">삭제</string>
+    <string name="api_key_confirm_delete_title">API 키 삭제</string>
+    <string name="api_key_confirm_delete_message">%1$s 의 API 키를 삭제할까요?</string>
+
+    <string name="snack_saved">저장되었습니다</string>
+    <string name="snack_key_invalid">키가 올바르지 않습니다</string>
+    <string name="snack_network">인터넷 연결 확인</string>
+    <string name="snack_timeout">응답 지연. 재시도</string>
+    <string name="snack_server_error">공급자 서버 오류. 잠시 후 재시도</string>
+    <string name="snack_unknown_format">오류: %1$s</string>
+
+    <string name="snack_no_provider">먼저 AI 공급자를 설정하세요</string>
+    <string name="snack_no_key">활성 공급자의 API 키가 없습니다</string>
+    <string name="snack_daily_cap_format">오늘 호출 한도(%1$d회) 도달</string>
+    <string name="snack_generate_success_format">예문 %1$d개 추가됨</string>
+    <string name="snack_generate_partial_format">%1$d개 중 %2$d개 생성됨</string>
+    <string name="snack_generate_key_invalid">API 키 오류. 설정에서 확인</string>
+    <string name="snack_generate_rate_limited">요청 한도 초과. 잠시 후 재시도</string>
+    <string name="snack_generate_content_filtered">콘텐츠 정책에 걸림. 다른 예문 요청</string>
+    <string name="snack_generate_parse_failure">응답 형식 오류. 재시도</string>
+    <string name="snack_generate_truncated">응답 잘림. 재시도</string>
+    <string name="snack_action_retry">재시도</string>
+    <string name="snack_action_settings">설정</string>
+    <string name="snack_action_change_cap">한도 변경</string>
 </resources>
