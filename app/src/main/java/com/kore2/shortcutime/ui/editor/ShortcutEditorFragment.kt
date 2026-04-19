@@ -41,7 +41,9 @@ class ShortcutEditorFragment : Fragment() {
 
     private val args: ShortcutEditorFragmentArgs by navArgs()
 
-    private val viewModel: ShortcutEditorViewModel by viewModels { ShortcutEditorViewModel.Factory }
+    private val viewModel: ShortcutEditorViewModel by viewModels {
+        ShortcutEditorViewModel.factory(args.folderId, args.shortcutId)
+    }
 
     private lateinit var exampleAdapter: ExampleAdapter
     private lateinit var savedShortcutAdapter: ShortcutAdapter

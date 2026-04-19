@@ -1,15 +1,10 @@
 package com.kore2.shortcutime.ui.detail
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import androidx.lifecycle.SAVED_STATE_REGISTRY_OWNER_KEY
-import androidx.lifecycle.VIEW_MODEL_STORE_OWNER_KEY
-import androidx.lifecycle.createSavedStateHandle
 import com.kore2.shortcutime.ShortcutApplication
 import com.kore2.shortcutime.data.FolderItem
 import com.kore2.shortcutime.data.FolderRepository
@@ -20,12 +15,8 @@ import kotlinx.coroutines.launch
 
 class FolderDetailViewModel(
     private val repository: FolderRepository,
-    savedStateHandle: SavedStateHandle,
+    val folderId: String,
 ) : ViewModel() {
-
-    val folderId: String = requireNotNull(savedStateHandle["folderId"]) {
-        "folderId argument is required"
-    }
 
     private val _state = MutableStateFlow<FolderDetailState>(FolderDetailState.Loading)
     val state: StateFlow<FolderDetailState> = _state.asStateFlow()
@@ -47,14 +38,14 @@ class FolderDetailViewModel(
     }
 
     companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
+        fun factory(folderId: String): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as ShortcutApplication
-                FolderDetailViewModel(app.repository, createSavedStateHandle())
+                FolderDetailViewModel(app.repository, folderId)
             }
         }
 
-        private val APPLICATION_KEY = androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY
+        private val APPLICATION_KEY = ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY
     }
 }
 

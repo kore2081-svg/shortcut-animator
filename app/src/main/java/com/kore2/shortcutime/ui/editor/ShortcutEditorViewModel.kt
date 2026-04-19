@@ -1,9 +1,7 @@
 package com.kore2.shortcutime.ui.editor
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -19,13 +17,9 @@ import kotlinx.coroutines.launch
 
 class ShortcutEditorViewModel(
     private val repository: FolderRepository,
-    savedStateHandle: SavedStateHandle,
+    val folderId: String,
+    val shortcutId: String?,
 ) : ViewModel() {
-
-    val folderId: String = requireNotNull(savedStateHandle["folderId"]) {
-        "folderId argument is required"
-    }
-    val shortcutId: String? = savedStateHandle["shortcutId"]
 
     private val _entry = MutableStateFlow<ShortcutEntry?>(null)
     val entry: StateFlow<ShortcutEntry?> = _entry.asStateFlow()
@@ -127,13 +121,13 @@ class ShortcutEditorViewModel(
     }
 
     companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
+        fun factory(folderId: String, shortcutId: String?): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as ShortcutApplication
-                ShortcutEditorViewModel(app.repository, createSavedStateHandle())
+                ShortcutEditorViewModel(app.repository, folderId, shortcutId)
             }
         }
 
-        private val APPLICATION_KEY = androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY
+        private val APPLICATION_KEY = ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY
     }
 }

@@ -30,7 +30,7 @@ class FolderDetailFragment : Fragment() {
     private val args: FolderDetailFragmentArgs by navArgs()
 
     private val viewModel: FolderDetailViewModel by viewModels {
-        FolderDetailViewModel.Factory
+        FolderDetailViewModel.factory(args.folderId)
     }
 
     private lateinit var adapter: ShortcutEntryAdapter
