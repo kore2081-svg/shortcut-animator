@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import com.kore2.shortcutime.R
 import com.kore2.shortcutime.ShortcutApplication
 import com.kore2.shortcutime.databinding.FragmentSettingsBinding
 import com.kore2.shortcutime.ui.applyToolbarTheme
@@ -27,6 +28,9 @@ class SettingsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.topToolbar.setNavigationIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material)
         binding.topToolbar.setNavigationOnClickListener { findNavController().popBackStack() }
+        binding.aiSettingsButton.setOnClickListener {
+            findNavController().navigate(R.id.action_settings_to_llmSettings)
+        }
     }
 
     override fun onResume() {
