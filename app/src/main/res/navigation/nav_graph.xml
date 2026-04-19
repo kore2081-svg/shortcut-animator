@@ -15,7 +15,7 @@
             app:destination="@id/folderDetailFragment" />
         <action
             android:id="@+id/action_folderList_to_folderEditor"
-            app:destination="@id/folderEditorActivity" />
+            app:destination="@id/folderEditorFragment" />
         <action
             android:id="@+id/action_folderList_to_settings"
             app:destination="@id/settingsActivity" />
@@ -35,19 +35,21 @@
             app:destination="@id/shortcutEditorActivity" />
         <action
             android:id="@+id/action_folderDetail_to_folderEditor"
-            app:destination="@id/folderEditorActivity" />
+            app:destination="@id/folderEditorFragment" />
     </fragment>
 
-    <activity
-        android:id="@+id/folderEditorActivity"
-        android:name="com.kore2.shortcutime.ui.FolderEditorActivity"
-        android:label="FolderEditor">
+    <fragment
+        android:id="@+id/folderEditorFragment"
+        android:name="com.kore2.shortcutime.ui.editor.FolderEditorFragment"
+        android:label="FolderEditor"
+        tools:layout="@layout/fragment_folder_editor"
+        xmlns:tools="http://schemas.android.com/tools">
         <argument
             android:name="folderId"
             app:argType="string"
             app:nullable="true"
             android:defaultValue="@null" />
-    </activity>
+    </fragment>
 
     <activity
         android:id="@+id/shortcutEditorActivity"
