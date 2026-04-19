@@ -18,18 +18,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".ui.FolderDetailActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.FolderEditorActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.ShortcutEditorActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.SettingsActivity"
-            android:exported="false" />
 
         <service
             android:name=".ime.ShortcutInputMethodService"
