@@ -40,6 +40,11 @@ class ShortcutAdapter(
             binding.shortcutLabel.setTextColor(theme.accentColor)
             binding.expandsToLabel.text = item.expandsTo
             binding.expandsToLabel.setTextColor(theme.textPrimary)
+            binding.usageBadge.text = binding.root.context.getString(
+                com.kore2.shortcutime.R.string.usage_badge_format,
+                item.usageDisplay,
+            )
+            binding.usageBadge.setTextColor(theme.textSecondary)
             binding.editShortcutButton.setTextColor(theme.textSecondary)
             binding.deleteShortcutButton.setTextColor(theme.textSecondary)
             binding.editShortcutButton.setOnClickListener { onEdit(item) }
