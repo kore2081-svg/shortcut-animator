@@ -1,5 +1,6 @@
 package com.kore2.shortcutime.ui.settings.llm
 
+import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -36,6 +37,13 @@ class ProviderRowAdapter(
             binding.providerStatus.text = ctx.getString(
                 if (row.saved) R.string.llm_key_status_saved else R.string.llm_key_status_missing
             )
+            if (row.saved) {
+                binding.providerStatus.setTextColor(android.graphics.Color.parseColor("#00C853"))
+                binding.providerStatus.setTypeface(null, Typeface.BOLD)
+            } else {
+                binding.providerStatus.setTextColor(ctx.getColor(R.color.text_secondary))
+                binding.providerStatus.setTypeface(null, Typeface.NORMAL)
+            }
             binding.root.setOnClickListener { onClick(row.providerId) }
         }
     }

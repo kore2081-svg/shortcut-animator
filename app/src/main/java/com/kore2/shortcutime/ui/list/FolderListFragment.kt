@@ -18,7 +18,6 @@ import com.kore2.shortcutime.data.FolderItem
 import com.kore2.shortcutime.databinding.FragmentFolderListBinding
 import com.kore2.shortcutime.ui.FolderAdapter
 import com.kore2.shortcutime.ui.applyFabTheme
-import com.kore2.shortcutime.ui.applyFilledButtonTheme
 import com.kore2.shortcutime.ui.applyToolbarTheme
 import kotlinx.coroutines.launch
 
@@ -53,8 +52,7 @@ class FolderListFragment : Fragment() {
         binding.folderRecyclerView.adapter = adapter
 
         binding.addFolderFab.setOnClickListener { openFolderEditor(null) }
-        binding.settingsButton.setOnClickListener { openSettings() }
-        binding.foldersButton.setOnClickListener { /* already here */ }
+        binding.settingsFab.setOnClickListener { openSettings() }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -85,11 +83,9 @@ class FolderListFragment : Fragment() {
         val theme = ShortcutApplication.from(requireContext()).themeStore.currentTheme()
         binding.root.setBackgroundColor(theme.appBackground)
         applyToolbarTheme(binding.topToolbar, theme)
-        binding.bottomTabBar.setBackgroundColor(theme.keyboardBackground)
-        applyFilledButtonTheme(binding.foldersButton, theme)
-        applyFilledButtonTheme(binding.settingsButton, theme)
         binding.emptyStateText.setTextColor(theme.textSecondary)
         applyFabTheme(binding.addFolderFab, theme)
+        applyFabTheme(binding.settingsFab, theme)
     }
 
     private fun openFolderDetail(folder: FolderItem) {

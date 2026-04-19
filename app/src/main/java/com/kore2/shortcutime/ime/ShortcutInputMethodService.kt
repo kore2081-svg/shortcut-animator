@@ -3,8 +3,11 @@ package com.kore2.shortcutime.ime
 import android.content.Intent
 import android.graphics.drawable.GradientDrawable
 import android.inputmethodservice.InputMethodService
+import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
@@ -36,6 +39,8 @@ class ShortcutInputMethodService : InputMethodService() {
     private lateinit var themeToggleButton: Button
     private lateinit var openAppButton: Button
     private var keyboardRootView: View? = null
+    private val backspaceHandler = Handler(Looper.getMainLooper())
+    private var backspaceRunnable: Runnable? = null
     private val shortcutBuffer = StringBuilder()
     private val keyButtons = linkedMapOf<Int, Button>()
     private val hangulComposer = HangulComposer()
@@ -118,8 +123,25 @@ class ShortcutInputMethodService : InputMethodService() {
             refreshKeyboardLabels(root)
             updatePreview()
         }
-        root.findViewById<Button>(R.id.keyBackspace).setOnClickListener {
-            handleBackspace()
+        val backspaceBtn = root.findViewById<Button>(R.id.keyBackspace)
+        backspaceBtn.setOnClickListener { handleBackspace() }
+        backspaceBtn.setOnLongClickListener {
+            val runnable = object : Runnable {
+                override fun run() {
+                    handleBackspace()
+                    backspaceHandler.postDelayed(this, 50L)
+                }
+            }
+            backspaceRunnable = runnable
+            backspaceHandler.post(runnable)
+            true
+        }
+        backspaceBtn.setOnTouchListener { _, event ->
+            if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) {
+                backspaceRunnable?.let { backspaceHandler.removeCallbacks(it) }
+                backspaceRunnable = null
+            }
+            false
         }
         root.findViewById<Button>(R.id.keySpace).setOnClickListener {
             flushHangulComposition()
@@ -1047,6 +1069,7 @@ class ShortcutInputMethodService : InputMethodService() {
             R.id.keyE,
             R.id.keyI,
             R.id.keyO,
+            R.id.keyApostrophe,
             R.id.keyZ,
             R.id.keyX,
             R.id.keyC,
