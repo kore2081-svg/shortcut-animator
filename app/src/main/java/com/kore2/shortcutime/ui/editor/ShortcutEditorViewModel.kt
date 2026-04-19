@@ -10,13 +10,21 @@ import com.kore2.shortcutime.data.ExampleItem
 import com.kore2.shortcutime.data.ExampleSourceType
 import com.kore2.shortcutime.data.FolderRepository
 import com.kore2.shortcutime.data.ShortcutEntry
+import com.kore2.shortcutime.llm.ExampleGenerationService
+import com.kore2.shortcutime.llm.LanguageClassifier
+import com.kore2.shortcutime.llm.LlmError
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class ShortcutEditorViewModel(
     private val repository: FolderRepository,
+    private val generationService: ExampleGenerationService,
     val folderId: String,
     val shortcutId: String?,
 ) : ViewModel() {
@@ -33,17 +41,18 @@ class ShortcutEditorViewModel(
     private val _folderMissing = MutableStateFlow(false)
     val folderMissing: StateFlow<Boolean> = _folderMissing.asStateFlow()
 
-    init {
-        load()
-    }
+    private val _isGenerating = MutableStateFlow(false)
+    val isGenerating: StateFlow<Boolean> = _isGenerating.asStateFlow()
+
+    private val _events = MutableSharedFlow<EditorEvent>(extraBufferCapacity = 4)
+    val events: SharedFlow<EditorEvent> = _events.asSharedFlow()
+
+    init { load() }
 
     fun load() {
         viewModelScope.launch {
             val folder = repository.getFolder(folderId)
-            if (folder == null) {
-                _folderMissing.value = true
-                return@launch
-            }
+            if (folder == null) { _folderMissing.value = true; return@launch }
             _savedShortcuts.value = folder.shortcuts
             val current = shortcutId?.let { id -> folder.shortcuts.firstOrNull { it.id == id } }
             _entry.value = current
@@ -69,43 +78,75 @@ class ShortcutEditorViewModel(
         _workingExamples.value = _workingExamples.value.filterNot { it.id == id }
     }
 
+    fun onGenerateExamplesClicked(shortcut: String, expansion: String, count: Int) {
+        if (shortcut.isBlank() || expansion.isBlank()) {
+            _events.tryEmit(EditorEvent.GenerateError(LlmError.Unknown("shortcut/expansion empty")))
+            return
+        }
+        viewModelScope.launch {
+            _isGenerating.value = true
+            try {
+                val outcome = generationService.generate(shortcut, expansion, count)
+                when (outcome) {
+                    is ExampleGenerationService.Outcome.Success -> {
+                        outcome.examples.forEach { addGeneratedExample(it) }
+                        _events.emit(EditorEvent.GenerateSuccess(outcome.examples.size))
+                    }
+                    is ExampleGenerationService.Outcome.Partial -> {
+                        outcome.examples.forEach { addGeneratedExample(it) }
+                        _events.emit(EditorEvent.GeneratePartial(outcome.examples.size, outcome.requested))
+                    }
+                    is ExampleGenerationService.Outcome.Failure -> _events.emit(EditorEvent.GenerateError(outcome.error))
+                    ExampleGenerationService.Outcome.NoActiveProvider -> _events.emit(EditorEvent.NoActiveProvider)
+                    ExampleGenerationService.Outcome.NoKey -> _events.emit(EditorEvent.NoKey)
+                    ExampleGenerationService.Outcome.DailyCapExceeded -> _events.emit(EditorEvent.DailyCapExceeded)
+                }
+            } finally {
+                _isGenerating.value = false
+            }
+        }
+    }
+
+    private fun addGeneratedExample(text: String) {
+        val item = when (LanguageClassifier.classify(text)) {
+            LanguageClassifier.Language.KOREAN -> ExampleItem(
+                id = UUID.randomUUID().toString(),
+                korean = text,
+                english = "",
+                sourceType = ExampleSourceType.AUTO,
+            )
+            LanguageClassifier.Language.ENGLISH -> ExampleItem(
+                id = UUID.randomUUID().toString(),
+                english = text,
+                korean = "",
+                sourceType = ExampleSourceType.AUTO,
+            )
+        }
+        addOrUpdateExample(item)
+    }
+
     fun save(
-        shortcut: String,
-        expandsTo: String,
-        note: String,
-        caseSensitive: Boolean,
-        backspaceToUndo: Boolean,
+        shortcut: String, expandsTo: String, note: String,
+        caseSensitive: Boolean, backspaceToUndo: Boolean,
     ): SaveResult {
         if (shortcut.isBlank()) return SaveResult.MissingShortcut
         if (expandsTo.isBlank()) return SaveResult.MissingExpandsTo
-
         val current = _entry.value
         val updated = if (current == null) {
             ShortcutEntry(
-                shortcut = shortcut,
-                expandsTo = expandsTo,
-                examples = _workingExamples.value,
-                note = note,
-                caseSensitive = caseSensitive,
-                backspaceToUndo = backspaceToUndo,
+                shortcut = shortcut, expandsTo = expandsTo,
+                examples = _workingExamples.value, note = note,
+                caseSensitive = caseSensitive, backspaceToUndo = backspaceToUndo,
             )
         } else {
             current.copy(
-                shortcut = shortcut,
-                expandsTo = expandsTo,
-                examples = _workingExamples.value,
-                note = note,
-                caseSensitive = caseSensitive,
-                backspaceToUndo = backspaceToUndo,
+                shortcut = shortcut, expandsTo = expandsTo,
+                examples = _workingExamples.value, note = note,
+                caseSensitive = caseSensitive, backspaceToUndo = backspaceToUndo,
                 updatedAt = System.currentTimeMillis(),
             )
         }
-
-        if (current == null) {
-            repository.addShortcut(folderId, updated)
-        } else {
-            repository.updateShortcut(folderId, updated)
-        }
+        if (current == null) repository.addShortcut(folderId, updated) else repository.updateShortcut(folderId, updated)
         return SaveResult.Success
     }
 
@@ -120,14 +161,22 @@ class ShortcutEditorViewModel(
         data object MissingExpandsTo : SaveResult()
     }
 
+    sealed class EditorEvent {
+        data class GenerateSuccess(val addedCount: Int) : EditorEvent()
+        data class GeneratePartial(val got: Int, val requested: Int) : EditorEvent()
+        data class GenerateError(val error: LlmError) : EditorEvent()
+        data object NoActiveProvider : EditorEvent()
+        data object NoKey : EditorEvent()
+        data object DailyCapExceeded : EditorEvent()
+    }
+
     companion object {
         fun factory(folderId: String, shortcutId: String?): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as ShortcutApplication
-                ShortcutEditorViewModel(app.repository, folderId, shortcutId)
+                ShortcutEditorViewModel(app.repository, app.exampleGenerationService, folderId, shortcutId)
             }
         }
-
         private val APPLICATION_KEY = ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY
     }
 }
