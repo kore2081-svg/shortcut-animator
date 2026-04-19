@@ -17,7 +17,6 @@ import com.kore2.shortcutime.data.FolderRepository
 import com.kore2.shortcutime.data.KeyboardThemePalette
 import com.kore2.shortcutime.data.KeyboardThemeStore
 import com.kore2.shortcutime.data.ShortcutMatch
-import com.kore2.shortcutime.ui.MainActivity
 
 class ShortcutInputMethodService : InputMethodService() {
     private lateinit var repository: FolderRepository
@@ -613,7 +612,7 @@ class ShortcutInputMethodService : InputMethodService() {
     }
 
     private fun openShortcutApp() {
-        val intent = Intent(this, MainActivity::class.java).apply {
+        val intent = Intent(this, com.kore2.shortcutime.ui.HostActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
         startActivity(intent)
