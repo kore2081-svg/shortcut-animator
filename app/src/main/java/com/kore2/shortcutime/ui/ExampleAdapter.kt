@@ -10,6 +10,7 @@ import com.kore2.shortcutime.databinding.ItemExampleBinding
 class ExampleAdapter(
     private val onEdit: (ExampleItem) -> Unit,
     private val onDelete: (ExampleItem) -> Unit,
+    private val onTranslate: (ExampleItem) -> Unit = {},
 ) : RecyclerView.Adapter<ExampleAdapter.ExampleViewHolder>() {
     private val items = mutableListOf<ExampleItem>()
 
@@ -44,8 +45,10 @@ class ExampleAdapter(
             binding.sourceTypeText.setTextColor(theme.accentColor)
             binding.editButton.setTextColor(theme.accentColor)
             binding.deleteButton.setTextColor(theme.textSecondary)
+            binding.translateButton.setTextColor(theme.accentColor)
             binding.editButton.setOnClickListener { onEdit(item) }
             binding.deleteButton.setOnClickListener { onDelete(item) }
+            binding.translateButton.setOnClickListener { onTranslate(item) }
         }
     }
 }

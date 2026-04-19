@@ -58,6 +58,9 @@ class ShortcutEditorViewModelPhase2Test {
                 override suspend fun generateExamples(
                     apiKey: String, model: String, shortcut: String, expansion: String, count: Int,
                 ) = Result.success(GenerationResult(listOf("BTW, I'll be late.", "안녕하세요"), count))
+                override suspend fun callWithPrompt(
+                    apiKey: String, model: String, prompt: String,
+                ) = Result.success(GenerationResult(listOf("번역 결과"), 1))
             }
         }
         val service = ExampleGenerationService(keyStore, settings, registry)

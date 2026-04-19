@@ -67,6 +67,7 @@ class ShortcutEditorFragment : Fragment() {
         exampleAdapter = ExampleAdapter(
             onEdit = { openExampleDialog(it) },
             onDelete = { viewModel.deleteExample(it.id) },
+            onTranslate = { viewModel.translateExample(it) },
         )
         savedShortcutAdapter = ShortcutAdapter(
             onEdit = { openExistingShortcut(it.id) },
@@ -348,6 +349,10 @@ class ShortcutEditorFragment : Fragment() {
                 msg = getString(R.string.snack_no_key)
                 actionLabel = R.string.snack_action_settings
                 actionHandler = { navigateToLlmSettings() }
+            }
+            ShortcutEditorViewModel.EditorEvent.ExampleCapReached -> {
+                msg = getString(R.string.snack_example_cap_reached, ShortcutEditorViewModel.MAX_EXAMPLES_PER_SHORTCUT)
+                actionLabel = null; actionHandler = null
             }
             ShortcutEditorViewModel.EditorEvent.DailyCapExceeded -> {
                 val cap = ShortcutApplication.from(requireContext()).llmSettingsStore.load().dailyCallCap

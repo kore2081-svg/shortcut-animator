@@ -60,10 +60,17 @@ class LlmSettingsViewModel(
     fun currentModelFor(provider: ProviderId): String =
         settingsStore.load().modelByProvider[provider] ?: ModelCatalog.recommendedModelId(provider)
 
-    private fun buildState() = State(
-        savedProviders = keyStore.getAllSaved(),
-        settings = settingsStore.load(),
-    )
+    private fun buildState() = try {
+        State(
+            savedProviders = keyStore.getAllSaved(),
+            settings = settingsStore.load(),
+        )
+    } catch (e: Exception) {
+        State(
+            savedProviders = emptySet(),
+            settings = settingsStore.load(),
+        )
+    }
 
     companion object {
         val factory: ViewModelProvider.Factory = viewModelFactory {

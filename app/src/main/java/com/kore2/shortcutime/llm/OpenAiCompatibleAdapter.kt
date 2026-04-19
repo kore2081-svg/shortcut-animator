@@ -42,8 +42,20 @@ class OpenAiCompatibleAdapter(
         shortcut: String,
         expansion: String,
         count: Int,
+    ): Result<GenerationResult> = callLlm(apiKey, model, PromptBuilder.build(shortcut, expansion, count), count)
+
+    override suspend fun callWithPrompt(
+        apiKey: String,
+        model: String,
+        prompt: String,
+    ): Result<GenerationResult> = callLlm(apiKey, model, prompt, 1)
+
+    private suspend fun callLlm(
+        apiKey: String,
+        model: String,
+        prompt: String,
+        count: Int,
     ): Result<GenerationResult> = withContext(Dispatchers.IO) {
-        val prompt = PromptBuilder.build(shortcut, expansion, count)
         val payload = """
             {"model":${json.encodeToString(String.serializer(), model)},"max_tokens":512,
              "response_format":{"type":"json_object"},
@@ -68,8 +80,7 @@ class OpenAiCompatibleAdapter(
                     "content_filter" -> throw LlmException(LlmError.ContentFiltered)
                 }
                 val content = first.message.content
-                val result = ParseExamples.parse(content, count)
-                result.getOrThrow()
+                ParseExamples.parse(content, count).getOrThrow()
             }
         }.mapExceptionToLlm()
     }

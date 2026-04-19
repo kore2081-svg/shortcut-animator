@@ -23,6 +23,13 @@ class ExampleGenerationService(
         object DailyCapExceeded : Outcome()
     }
 
+    sealed class TranslationOutcome {
+        data class Success(val translation: String) : TranslationOutcome()
+        data class Failure(val error: LlmError) : TranslationOutcome()
+        object NoActiveProvider : TranslationOutcome()
+        object NoKey : TranslationOutcome()
+    }
+
     private val counterMutex = Mutex()
 
     suspend fun generate(shortcut: String, expansion: String, count: Int): Outcome {
@@ -52,6 +59,27 @@ class ExampleGenerationService(
             onFailure = { t ->
                 val err = (t as? LlmException)?.error ?: LlmError.Unknown(t.message.orEmpty())
                 Outcome.Failure(err)
+            },
+        )
+    }
+
+    suspend fun translate(text: String, targetLanguage: String): TranslationOutcome {
+        val snapshot = settingsStore.load()
+        val provider = snapshot.activeProvider ?: return TranslationOutcome.NoActiveProvider
+        val key = keyStore.get(provider) ?: return TranslationOutcome.NoKey
+        val model = snapshot.modelByProvider[provider] ?: ModelCatalog.recommendedModelId(provider)
+        val adapter = registry.adapterFor(provider)
+        val prompt = PromptBuilder.buildTranslation(text, targetLanguage)
+        val result = adapter.callWithPrompt(key, model, prompt)
+        return result.fold(
+            onSuccess = { gen ->
+                val translation = gen.examples.firstOrNull()
+                if (translation.isNullOrBlank()) TranslationOutcome.Failure(LlmError.ParseFailure)
+                else TranslationOutcome.Success(translation)
+            },
+            onFailure = { t ->
+                val err = (t as? LlmException)?.error ?: LlmError.Unknown(t.message.orEmpty())
+                TranslationOutcome.Failure(err)
             },
         )
     }

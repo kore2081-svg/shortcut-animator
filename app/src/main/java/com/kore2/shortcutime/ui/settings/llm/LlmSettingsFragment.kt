@@ -28,6 +28,7 @@ class LlmSettingsFragment : Fragment() {
 
     private val vm: LlmSettingsViewModel by viewModels { LlmSettingsViewModel.factory }
     private lateinit var rowAdapter: ProviderRowAdapter
+    private var pendingCap: Int = -1
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?,
@@ -50,11 +51,21 @@ class LlmSettingsFragment : Fragment() {
         binding.dailyCapSeekBar.max = LlmSettingsStore.MAX_CAP - LlmSettingsStore.MIN_CAP
         binding.dailyCapSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) vm.setDailyCap(progress + LlmSettingsStore.MIN_CAP)
+                if (fromUser) {
+                    val cap = progress + LlmSettingsStore.MIN_CAP
+                    pendingCap = cap
+                    binding.dailyCapValue.text = getString(R.string.llm_daily_cap_format, cap)
+                }
             }
             override fun onStartTrackingTouch(bar: SeekBar?) = Unit
             override fun onStopTrackingTouch(bar: SeekBar?) = Unit
         })
+        binding.saveCapButton.setOnClickListener {
+            if (pendingCap >= LlmSettingsStore.MIN_CAP) {
+                vm.setDailyCap(pendingCap)
+                pendingCap = -1
+            }
+        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {

@@ -38,8 +38,20 @@ class ClaudeAdapter(
         shortcut: String,
         expansion: String,
         count: Int,
+    ): Result<GenerationResult> = callLlm(apiKey, model, PromptBuilder.build(shortcut, expansion, count), count)
+
+    override suspend fun callWithPrompt(
+        apiKey: String,
+        model: String,
+        prompt: String,
+    ): Result<GenerationResult> = callLlm(apiKey, model, prompt, 1)
+
+    private suspend fun callLlm(
+        apiKey: String,
+        model: String,
+        prompt: String,
+        count: Int,
     ): Result<GenerationResult> = withContext(Dispatchers.IO) {
-        val prompt = PromptBuilder.build(shortcut, expansion, count)
         val body = """
             {"model":${json.encodeToString(String.serializer(), model)},"max_tokens":512,
              "messages":[{"role":"user","content":${json.encodeToString(String.serializer(), prompt)}}]}

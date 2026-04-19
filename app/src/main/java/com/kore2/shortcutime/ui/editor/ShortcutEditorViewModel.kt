@@ -83,10 +83,16 @@ class ShortcutEditorViewModel(
             _events.tryEmit(EditorEvent.GenerateError(LlmError.Unknown("shortcut/expansion empty")))
             return
         }
+        val remaining = MAX_EXAMPLES_PER_SHORTCUT - _workingExamples.value.size
+        if (remaining <= 0) {
+            _events.tryEmit(EditorEvent.ExampleCapReached)
+            return
+        }
+        val actualCount = minOf(count, remaining)
         viewModelScope.launch {
             _isGenerating.value = true
             try {
-                val outcome = generationService.generate(shortcut, expansion, count)
+                val outcome = generationService.generate(shortcut, expansion, actualCount)
                 when (outcome) {
                     is ExampleGenerationService.Outcome.Success -> {
                         outcome.examples.forEach { addGeneratedExample(it) }
@@ -107,6 +113,31 @@ class ShortcutEditorViewModel(
         }
     }
 
+    fun translateExample(item: ExampleItem) {
+        viewModelScope.launch {
+            val (sourceText, targetLanguage) = if (item.english.isNotBlank()) {
+                item.english to "Korean"
+            } else {
+                item.korean to "English"
+            }
+            val outcome = generationService.translate(sourceText, targetLanguage)
+            when (outcome) {
+                is ExampleGenerationService.TranslationOutcome.Success -> {
+                    val updated = if (item.english.isNotBlank()) {
+                        item.copy(korean = outcome.translation)
+                    } else {
+                        item.copy(english = outcome.translation)
+                    }
+                    addOrUpdateExample(updated)
+                    if (shortcutId != null) autoSave()
+                }
+                ExampleGenerationService.TranslationOutcome.NoActiveProvider -> _events.tryEmit(EditorEvent.NoActiveProvider)
+                ExampleGenerationService.TranslationOutcome.NoKey -> _events.tryEmit(EditorEvent.NoKey)
+                is ExampleGenerationService.TranslationOutcome.Failure -> _events.tryEmit(EditorEvent.GenerateError(outcome.error))
+            }
+        }
+    }
+
     private fun addGeneratedExample(text: String) {
         val item = when (LanguageClassifier.classify(text)) {
             LanguageClassifier.Language.KOREAN -> ExampleItem(
@@ -123,6 +154,16 @@ class ShortcutEditorViewModel(
             )
         }
         addOrUpdateExample(item)
+        if (shortcutId != null) autoSave()
+    }
+
+    private fun autoSave() {
+        val entry = _entry.value ?: return
+        val updated = entry.copy(
+            examples = _workingExamples.value,
+            updatedAt = System.currentTimeMillis(),
+        )
+        repository.updateShortcut(folderId, updated)
     }
 
     fun save(
@@ -168,9 +209,11 @@ class ShortcutEditorViewModel(
         data object NoActiveProvider : EditorEvent()
         data object NoKey : EditorEvent()
         data object DailyCapExceeded : EditorEvent()
+        data object ExampleCapReached : EditorEvent()
     }
 
     companion object {
+        const val MAX_EXAMPLES_PER_SHORTCUT = 10
         fun factory(folderId: String, shortcutId: String?): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as ShortcutApplication
@@ -179,4 +222,5 @@ class ShortcutEditorViewModel(
         }
         private val APPLICATION_KEY = ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY
     }
+
 }

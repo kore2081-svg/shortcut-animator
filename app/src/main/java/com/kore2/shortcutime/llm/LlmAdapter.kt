@@ -10,4 +10,5 @@ interface LlmAdapter {
         expansion: String,
         count: Int,
     ): Result<GenerationResult>
+    suspend fun callWithPrompt(apiKey: String, model: String, prompt: String): Result<GenerationResult>
 }

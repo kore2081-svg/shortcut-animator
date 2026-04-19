@@ -39,8 +39,20 @@ class GeminiAdapter(
         shortcut: String,
         expansion: String,
         count: Int,
+    ): Result<GenerationResult> = callLlm(apiKey, model, PromptBuilder.build(shortcut, expansion, count), count)
+
+    override suspend fun callWithPrompt(
+        apiKey: String,
+        model: String,
+        prompt: String,
+    ): Result<GenerationResult> = callLlm(apiKey, model, prompt, 1)
+
+    private suspend fun callLlm(
+        apiKey: String,
+        model: String,
+        prompt: String,
+        count: Int,
     ): Result<GenerationResult> = withContext(Dispatchers.IO) {
-        val prompt = PromptBuilder.build(shortcut, expansion, count)
         val body = """
             {"contents":[{"parts":[{"text":${json.encodeToString(String.serializer(), prompt)}}]}],
              "generationConfig":{"responseMimeType":"application/json","maxOutputTokens":512}}

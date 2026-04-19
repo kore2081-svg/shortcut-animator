@@ -129,6 +129,9 @@ class ExampleGenerationServiceTest {
             callCount++
             return result
         }
+        override suspend fun callWithPrompt(
+            apiKey: String, model: String, prompt: String,
+        ): Result<GenerationResult> = result
     }
 
     class FakeRegistry(private val adapter: LlmAdapter) : AdapterRegistry {
