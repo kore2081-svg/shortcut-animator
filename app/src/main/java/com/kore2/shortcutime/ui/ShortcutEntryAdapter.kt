@@ -38,6 +38,11 @@ class ShortcutEntryAdapter(
             binding.shortcutText.setTextColor(theme.textPrimary)
             binding.expandsToText.text = item.expandsTo
             binding.expandsToText.setTextColor(theme.textSecondary)
+            binding.usageBadge.text = binding.root.context.getString(
+                com.kore2.shortcutime.R.string.usage_badge_format,
+                item.usageDisplay,
+            )
+            binding.usageBadge.setTextColor(theme.textSecondary)
             binding.openArrowText.setTextColor(theme.accentColor)
             binding.openArrowText.setOnClickListener { onShortcutClick(item) }
             binding.root.setOnLongClickListener {

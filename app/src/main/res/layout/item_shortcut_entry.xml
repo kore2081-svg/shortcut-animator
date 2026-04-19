@@ -47,6 +47,16 @@
     </LinearLayout>
 
     <TextView
+        android:id="@+id/usageBadge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="4dp"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp" />
+
+    <TextView
         android:id="@+id/openArrowText"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
