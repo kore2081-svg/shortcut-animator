@@ -28,6 +28,17 @@
             android:textColor="@color/text_secondary"
             android:textSize="14sp" />
 
+        <TextView
+            android:id="@+id/emptyStateText"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:padding="24dp"
+            android:text="@string/empty_shortcut_entries"
+            android:textColor="@color/text_secondary"
+            android:visibility="gone" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/shortcutRecyclerView"
             android:layout_width="match_parent"
@@ -36,16 +47,6 @@
             android:clipToPadding="false"
             android:nestedScrollingEnabled="false"
             android:padding="16dp" />
-
-        <TextView
-            android:id="@+id/emptyStateText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:padding="24dp"
-            android:text="@string/empty_shortcut_entries"
-            android:textColor="@color/text_secondary"
-            android:visibility="gone" />
     </LinearLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton

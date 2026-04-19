@@ -48,6 +48,7 @@ class ShortcutEntryAdapter(
             )
             binding.usageBadge.setTextColor(theme.textSecondary)
             binding.openArrowText.setTextColor(theme.accentColor)
+            binding.root.setOnClickListener { onShortcutClick(item) }
             binding.openArrowText.setOnClickListener { onShortcutClick(item) }
             binding.root.setOnLongClickListener {
                 onShortcutDelete(item)

@@ -130,10 +130,10 @@ class ShortcutEditorFragment : Fragment() {
                 launch {
                     viewModel.entry.collect { entry ->
                         entry?.let { bindEntry(it) }
-                        if (entry != null) {
-                            binding.topToolbar.title = getString(R.string.title_edit_shortcut)
+                        binding.topToolbar.title = if (entry != null) {
+                            getString(R.string.title_edit_shortcut)
                         } else {
-                            binding.topToolbar.title = getString(R.string.title_folder_list)
+                            getString(R.string.title_add_shortcut_entry)
                         }
                     }
                 }

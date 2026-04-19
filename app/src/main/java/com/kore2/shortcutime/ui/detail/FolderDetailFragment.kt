@@ -95,8 +95,9 @@ class FolderDetailFragment : Fragment() {
         binding.folderHeaderText.text =
             getString(R.string.folder_header_format, folder.title, folder.shortcuts.size)
         adapter.submitList(folder.shortcuts)
-        binding.emptyStateText.visibility =
-            if (folder.shortcuts.isEmpty()) View.VISIBLE else View.GONE
+        val empty = folder.shortcuts.isEmpty()
+        binding.emptyStateText.visibility = if (empty) View.VISIBLE else View.GONE
+        binding.shortcutRecyclerView.visibility = if (empty) View.GONE else View.VISIBLE
     }
 
     private fun applyTheme() {
