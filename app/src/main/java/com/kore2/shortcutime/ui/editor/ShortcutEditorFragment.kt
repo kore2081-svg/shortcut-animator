@@ -88,11 +88,9 @@ class ShortcutEditorFragment : Fragment() {
         setupGenerateCountButtons()
         binding.addExampleButton.setOnClickListener { openExampleDialog(null) }
         binding.generateExamplesButton.setOnClickListener {
-            Toast.makeText(
-                requireContext(),
-                R.string.phase2_feature_not_ready,
-                Toast.LENGTH_SHORT,
-            ).show()
+            val shortcut = binding.shortcutInput.text?.toString().orEmpty().trim()
+            val expansion = binding.expandsToInput.text?.toString().orEmpty().trim()
+            viewModel.onGenerateExamplesClicked(shortcut, expansion, selectedGenerateCount)
         }
         binding.saveButton.setOnClickListener { onSaveClick() }
         binding.shortcutInput.addTextChangedListener { text ->
@@ -152,6 +150,19 @@ class ShortcutEditorFragment : Fragment() {
                         binding.savedShortcutsRecyclerView.visibility =
                             if (list.isEmpty()) View.GONE else View.VISIBLE
                     }
+                }
+                launch {
+                    viewModel.isGenerating.collect { generating ->
+                        binding.generateExamplesButton.isEnabled = !generating
+                        binding.generateExamplesButton.text = if (generating) {
+                            getString(R.string.preview_animating, "")
+                        } else {
+                            getString(R.string.action_generate_examples)
+                        }
+                    }
+                }
+                launch {
+                    viewModel.events.collect { showEventSnackbar(it) }
                 }
             }
         }
@@ -314,6 +325,71 @@ class ShortcutEditorFragment : Fragment() {
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
+    }
+
+    private fun showEventSnackbar(event: ShortcutEditorViewModel.EditorEvent) {
+        val root = binding.root
+        val msg: String
+        val actionLabel: Int?
+        val actionHandler: (() -> Unit)?
+        when (event) {
+            is ShortcutEditorViewModel.EditorEvent.GenerateSuccess -> {
+                msg = getString(R.string.snack_generate_success_format, event.addedCount); actionLabel = null; actionHandler = null
+            }
+            is ShortcutEditorViewModel.EditorEvent.GeneratePartial -> {
+                msg = getString(R.string.snack_generate_partial_format, event.requested, event.got); actionLabel = null; actionHandler = null
+            }
+            ShortcutEditorViewModel.EditorEvent.NoActiveProvider -> {
+                msg = getString(R.string.snack_no_provider)
+                actionLabel = R.string.snack_action_settings
+                actionHandler = { navigateToLlmSettings() }
+            }
+            ShortcutEditorViewModel.EditorEvent.NoKey -> {
+                msg = getString(R.string.snack_no_key)
+                actionLabel = R.string.snack_action_settings
+                actionHandler = { navigateToLlmSettings() }
+            }
+            ShortcutEditorViewModel.EditorEvent.DailyCapExceeded -> {
+                val cap = ShortcutApplication.from(requireContext()).llmSettingsStore.load().dailyCallCap
+                msg = getString(R.string.snack_daily_cap_format, cap)
+                actionLabel = R.string.snack_action_change_cap
+                actionHandler = { navigateToLlmSettings() }
+            }
+            is ShortcutEditorViewModel.EditorEvent.GenerateError -> {
+                msg = when (val err = event.error) {
+                    com.kore2.shortcutime.llm.LlmError.Network -> getString(R.string.snack_network)
+                    com.kore2.shortcutime.llm.LlmError.Timeout -> getString(R.string.snack_timeout)
+                    com.kore2.shortcutime.llm.LlmError.InvalidKey -> getString(R.string.snack_generate_key_invalid)
+                    com.kore2.shortcutime.llm.LlmError.RateLimited -> getString(R.string.snack_generate_rate_limited)
+                    com.kore2.shortcutime.llm.LlmError.ServerError -> getString(R.string.snack_server_error)
+                    com.kore2.shortcutime.llm.LlmError.ContentFiltered -> getString(R.string.snack_generate_content_filtered)
+                    com.kore2.shortcutime.llm.LlmError.ParseFailure -> getString(R.string.snack_generate_parse_failure)
+                    com.kore2.shortcutime.llm.LlmError.Truncated -> getString(R.string.snack_generate_truncated)
+                    is com.kore2.shortcutime.llm.LlmError.Unknown -> getString(R.string.snack_unknown_format, err.message)
+                }
+                actionLabel = when (event.error) {
+                    com.kore2.shortcutime.llm.LlmError.InvalidKey -> R.string.snack_action_settings
+                    else -> R.string.snack_action_retry
+                }
+                actionHandler = {
+                    if (event.error is com.kore2.shortcutime.llm.LlmError.InvalidKey) navigateToLlmSettings()
+                    else retryLastGeneration()
+                }
+            }
+        }
+        val snack = com.google.android.material.snackbar.Snackbar.make(root, msg, com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
+        if (actionLabel != null && actionHandler != null) snack.setAction(actionLabel) { actionHandler() }
+        snack.show()
+    }
+
+    private fun navigateToLlmSettings() {
+        findNavController().navigate(R.id.action_shortcutEditor_to_llmSettings)
+    }
+
+    private fun retryLastGeneration() {
+        val shortcut = binding.shortcutInput.text?.toString().orEmpty().trim()
+        val expansion = binding.expandsToInput.text?.toString().orEmpty().trim()
+        viewModel.onGenerateExamplesClicked(shortcut, expansion, selectedGenerateCount)
     }
 
     companion object {
