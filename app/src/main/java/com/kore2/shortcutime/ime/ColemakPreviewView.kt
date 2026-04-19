@@ -55,7 +55,7 @@ class ColemakPreviewView @JvmOverloads constructor(
     private var onAnimationFinished: ((String) -> Unit)? = null
     private var animationToken = 0
 
-    fun playSequence(sequence: String, stepDurationMs: Long = 1000L) {
+    fun playSequence(sequence: String) {
         animationToken += 1
         animationHandler.removeCallbacksAndMessages(null)
 
@@ -71,40 +71,34 @@ class ColemakPreviewView @JvmOverloads constructor(
         }
 
         val token = animationToken
-        displayedSequence.indices.forEach { index ->
-            animationHandler.postDelayed(
-                {
-                    if (token != animationToken) return@postDelayed
-                    activeIndex = index
-                    showCompleted = false
-                    showTrail = false
-                    invalidate()
-                },
-                index * stepDurationMs,
-            )
-        }
+        val cycleMs = KEY_LIT_MS + KEY_GAP_MS
 
-        animationHandler.postDelayed(
-            {
+        displayedSequence.indices.forEach { index ->
+            val litAt = index * cycleMs
+            val offAt = litAt + KEY_LIT_MS
+            animationHandler.postDelayed({
                 if (token != animationToken) return@postDelayed
-                activeIndex = -1
+                activeIndex = index
                 showCompleted = false
                 showTrail = false
                 invalidate()
-            },
-            displayedSequence.size * stepDurationMs,
-        )
-
-        animationHandler.postDelayed(
-            {
+            }, litAt)
+            animationHandler.postDelayed({
                 if (token != animationToken) return@postDelayed
-                showCompleted = true
-                showTrail = true
+                activeIndex = -1
                 invalidate()
-                onAnimationFinished?.invoke(displayedSequence.joinToString(""))
-            },
-            displayedSequence.size * stepDurationMs + stepDurationMs,
-        )
+            }, offAt)
+        }
+
+        val finalAt = displayedSequence.size * cycleMs - KEY_GAP_MS + FINAL_PAUSE_MS
+        animationHandler.postDelayed({
+            if (token != animationToken) return@postDelayed
+            activeIndex = -1
+            showCompleted = true
+            showTrail = displayedSequence.size > 1
+            invalidate()
+            onAnimationFinished?.invoke(displayedSequence.joinToString(""))
+        }, finalAt)
     }
 
     fun setSequence(sequence: String) {
@@ -229,5 +223,8 @@ class ColemakPreviewView @JvmOverloads constructor(
 
     companion object {
         private const val COLEMAK_KEYS = "qwfpgjluy;arstdhneio'zxcvbkm,./"
+        private const val KEY_LIT_MS = 700L
+        private const val KEY_GAP_MS = 150L
+        private const val FINAL_PAUSE_MS = 400L
     }
 }

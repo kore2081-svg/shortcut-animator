@@ -497,7 +497,7 @@ class ShortcutInputMethodService : InputMethodService() {
                     PreviewMode.ON -> previewView.setSequence(current)
                     PreviewMode.SEMI -> {
                         if (exactMatch != null) {
-                            previewView.playSequence(current, 160L)
+                            previewView.playSequence(current)
                         } else {
                             previewView.clearAnimationState()
                         }
