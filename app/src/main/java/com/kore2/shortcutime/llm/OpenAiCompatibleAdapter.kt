@@ -45,7 +45,7 @@ class OpenAiCompatibleAdapter(
     ): Result<GenerationResult> = withContext(Dispatchers.IO) {
         val prompt = PromptBuilder.build(shortcut, expansion, count)
         val payload = """
-            {"model":"$model","max_tokens":512,
+            {"model":${json.encodeToString(String.serializer(), model)},"max_tokens":512,
              "response_format":{"type":"json_object"},
              "messages":[{"role":"user","content":${json.encodeToString(String.serializer(), prompt)}}]}
         """.trimIndent()
@@ -91,6 +91,7 @@ class OpenAiCompatibleAdapter(
     }
 
     private fun <T> Result<T>.mapExceptionToLlm(): Result<T> = recoverCatching { t ->
+        if (t is kotlinx.coroutines.CancellationException) throw t
         throw when (t) {
             is LlmException -> t
             is SocketTimeoutException -> LlmException(LlmError.Timeout)
