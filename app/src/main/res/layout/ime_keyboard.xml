@@ -773,23 +773,23 @@
             android:orientation="horizontal">
 
             <Button
-                android:id="@+id/keyLanguage"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_weight="1.35"
-                android:background="@drawable/ime_key_bg"
-                android:textColor="@color/text_primary"
-                android:text="@string/keyboard_lang_english" />
-
-            <Button
                 android:id="@+id/keyMode"
                 android:layout_width="0dp"
                 android:layout_height="52dp"
-                android:layout_marginStart="6dp"
-                android:layout_weight="1.15"
+                android:layout_weight="0.95"
                 android:background="@drawable/ime_key_bg"
                 android:text="@string/keyboard_mode_numbers"
                 android:textColor="@color/text_primary" />
+
+            <Button
+                android:id="@+id/keyLanguage"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1.55"
+                android:background="@drawable/ime_key_bg"
+                android:textColor="@color/text_primary"
+                android:text="@string/keyboard_lang_english" />
 
             <Button
                 android:id="@+id/keySpace"

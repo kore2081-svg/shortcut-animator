@@ -48,7 +48,7 @@ class ShortcutInputMethodService : InputMethodService() {
     private var keyboardMode = KeyboardMode.LETTERS
     private var languageMode = LanguageMode.ENGLISH
     private var symbolPage = SymbolPage.PRIMARY
-    private var previewMode = PreviewMode.ON
+    private var previewMode = PreviewMode.SEMI
     private var themeOptionsVisible = false
     private var currentCandidates: List<ShortcutMatch> = emptyList()
 
@@ -781,7 +781,7 @@ class ShortcutInputMethodService : InputMethodService() {
             R.id.keyL to 'l',
             R.id.keyU to 'u',
             R.id.keyY to 'y',
-            R.id.keySlash to ';',
+            R.id.keySlash to '\'',
             R.id.keyLeftBracket to '[',
             R.id.keyRightBracket to ']',
             R.id.keyA to 'a',
@@ -962,7 +962,7 @@ class ShortcutInputMethodService : InputMethodService() {
             R.id.keyL to 'l',
             R.id.keyU to 'u',
             R.id.keyY to 'y',
-            R.id.keySlash to ':',
+            R.id.keySlash to '"',
             R.id.keyLeftBracket to '{',
             R.id.keyRightBracket to '}',
             R.id.keyA to 'a',
@@ -1069,7 +1069,6 @@ class ShortcutInputMethodService : InputMethodService() {
             R.id.keyE,
             R.id.keyI,
             R.id.keyO,
-            R.id.keyApostrophe,
             R.id.keyZ,
             R.id.keyX,
             R.id.keyC,

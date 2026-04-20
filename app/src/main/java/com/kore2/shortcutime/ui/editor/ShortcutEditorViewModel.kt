@@ -32,9 +32,6 @@ class ShortcutEditorViewModel(
     private val _entry = MutableStateFlow<ShortcutEntry?>(null)
     val entry: StateFlow<ShortcutEntry?> = _entry.asStateFlow()
 
-    private val _savedShortcuts = MutableStateFlow<List<ShortcutEntry>>(emptyList())
-    val savedShortcuts: StateFlow<List<ShortcutEntry>> = _savedShortcuts.asStateFlow()
-
     private val _workingExamples = MutableStateFlow<List<ExampleItem>>(emptyList())
     val workingExamples: StateFlow<List<ExampleItem>> = _workingExamples.asStateFlow()
 
@@ -53,17 +50,9 @@ class ShortcutEditorViewModel(
         viewModelScope.launch {
             val folder = repository.getFolder(folderId)
             if (folder == null) { _folderMissing.value = true; return@launch }
-            _savedShortcuts.value = folder.shortcuts.filterNot { it.id == shortcutId }
             val current = shortcutId?.let { id -> folder.shortcuts.firstOrNull { it.id == id } }
             _entry.value = current
             _workingExamples.value = current?.examples.orEmpty()
-        }
-    }
-
-    fun refreshSavedShortcuts() {
-        viewModelScope.launch {
-            val folder = repository.getFolder(folderId) ?: return@launch
-            _savedShortcuts.value = folder.shortcuts.filterNot { it.id == shortcutId }
         }
     }
 
@@ -200,11 +189,16 @@ class ShortcutEditorViewModel(
         }
     }
 
-    fun deleteShortcut(id: String) {
-        viewModelScope.launch {
-            repository.deleteShortcut(folderId, id)
-            refreshSavedShortcuts()
-        }
+    fun setManualExamples(newManuals: List<ExampleItem>) {
+        val autos = _workingExamples.value.filter { it.sourceType == ExampleSourceType.AUTO }
+        _workingExamples.value = newManuals + autos
+        if (shortcutId != null) autoSave()
+    }
+
+    fun setAutoExamples(newAutos: List<ExampleItem>) {
+        val manuals = _workingExamples.value.filter { it.sourceType == ExampleSourceType.MANUAL }
+        _workingExamples.value = manuals + newAutos
+        if (shortcutId != null) autoSave()
     }
 
     sealed class SaveResult {

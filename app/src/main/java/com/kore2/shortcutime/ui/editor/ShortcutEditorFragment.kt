@@ -1,5 +1,6 @@
 package com.kore2.shortcutime.ui.editor
 
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -16,7 +17,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.kore2.shortcutime.R
 import com.kore2.shortcutime.ShortcutApplication
 import com.kore2.shortcutime.data.ExampleItem
@@ -24,8 +27,8 @@ import com.kore2.shortcutime.data.ExampleSourceType
 import com.kore2.shortcutime.data.ShortcutEntry
 import com.kore2.shortcutime.databinding.DialogExampleEditorBinding
 import com.kore2.shortcutime.databinding.FragmentShortcutEditorBinding
-import com.kore2.shortcutime.ui.ExampleAdapter
-import com.kore2.shortcutime.ui.ShortcutAdapter
+import com.kore2.shortcutime.ui.AutoExampleAdapter
+import com.kore2.shortcutime.ui.ManualExampleAdapter
 import com.kore2.shortcutime.ui.applyBodyTextTheme
 import com.kore2.shortcutime.ui.applyFilledButtonTheme
 import com.kore2.shortcutime.ui.applyInputLayoutTheme
@@ -44,10 +47,14 @@ class ShortcutEditorFragment : Fragment() {
         ShortcutEditorViewModel.factory(args.folderId, args.shortcutId)
     }
 
-    private lateinit var exampleAdapter: ExampleAdapter
-    private lateinit var savedShortcutAdapter: ShortcutAdapter
+    private lateinit var manualAdapter: ManualExampleAdapter
+    private lateinit var autoAdapter: AutoExampleAdapter
+    private lateinit var manualTouchHelper: ItemTouchHelper
+    private lateinit var autoTouchHelper: ItemTouchHelper
 
     private var selectedGenerateCount: Int = 1
+    private var manualSectionExpanded = true
+
     private val previewHandler = Handler(Looper.getMainLooper())
     private var previewRunnable: Runnable? = null
 
@@ -63,19 +70,66 @@ class ShortcutEditorFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        exampleAdapter = ExampleAdapter(
+        // Manual examples adapter + ItemTouchHelper
+        manualAdapter = ManualExampleAdapter(
             onEdit = { openExampleDialog(it) },
             onDelete = { viewModel.deleteExample(it.id) },
             onTranslate = { viewModel.translateExample(it) },
+            onStartDrag = { holder -> manualTouchHelper.startDrag(holder) },
         )
-        savedShortcutAdapter = ShortcutAdapter(
-            onEdit = { openExistingShortcut(it.id) },
-            onDelete = { confirmDeleteExisting(it) },
+        manualTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
+            ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0
+        ) {
+            override fun isLongPressDragEnabled() = false
+            override fun onMove(
+                rv: RecyclerView,
+                vh: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder,
+            ): Boolean {
+                manualAdapter.moveItem(vh.bindingAdapterPosition, target.bindingAdapterPosition)
+                return true
+            }
+            override fun onSwiped(vh: RecyclerView.ViewHolder, direction: Int) {}
+            override fun clearView(rv: RecyclerView, vh: RecyclerView.ViewHolder) {
+                super.clearView(rv, vh)
+                viewModel.setManualExamples(manualAdapter.getItems())
+            }
+        })
+
+        // Auto examples adapter + ItemTouchHelper
+        autoAdapter = AutoExampleAdapter(
+            onDelete = { viewModel.deleteExample(it.id) },
+            onTranslate = { viewModel.translateExample(it) },
+            onStartDrag = { holder -> autoTouchHelper.startDrag(holder) },
+            getShortcut = { binding.shortcutInput.text?.toString().orEmpty().trim() },
+            getExpandsTo = { binding.expandsToInput.text?.toString().orEmpty().trim() },
         )
-        binding.examplesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        binding.examplesRecyclerView.adapter = exampleAdapter
-        binding.savedShortcutsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        binding.savedShortcutsRecyclerView.adapter = savedShortcutAdapter
+        autoTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
+            ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0
+        ) {
+            override fun isLongPressDragEnabled() = false
+            override fun onMove(
+                rv: RecyclerView,
+                vh: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder,
+            ): Boolean {
+                autoAdapter.moveItem(vh.bindingAdapterPosition, target.bindingAdapterPosition)
+                return true
+            }
+            override fun onSwiped(vh: RecyclerView.ViewHolder, direction: Int) {}
+            override fun clearView(rv: RecyclerView, vh: RecyclerView.ViewHolder) {
+                super.clearView(rv, vh)
+                viewModel.setAutoExamples(autoAdapter.getItems())
+            }
+        })
+
+        binding.manualExamplesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.manualExamplesRecyclerView.adapter = manualAdapter
+        manualTouchHelper.attachToRecyclerView(binding.manualExamplesRecyclerView)
+
+        binding.autoExamplesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.autoExamplesRecyclerView.adapter = autoAdapter
+        autoTouchHelper.attachToRecyclerView(binding.autoExamplesRecyclerView)
 
         binding.topToolbar.setNavigationIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material)
         binding.topToolbar.setNavigationOnClickListener { findNavController().popBackStack() }
@@ -83,6 +137,14 @@ class ShortcutEditorFragment : Fragment() {
         binding.previewTitle.text = getString(R.string.preview_title)
         binding.colemakPreview.setOnAnimationFinishedListener {
             binding.previewStatus.text = getString(R.string.preview_complete, it)
+        }
+
+        // Manual section collapse toggle
+        binding.manualCollapseToggle.setOnClickListener {
+            manualSectionExpanded = !manualSectionExpanded
+            binding.manualExamplesRecyclerView.visibility =
+                if (manualSectionExpanded) View.VISIBLE else View.GONE
+            binding.manualCollapseToggle.text = if (manualSectionExpanded) "▽" else "△"
         }
 
         setupGenerateCountButtons()
@@ -103,7 +165,6 @@ class ShortcutEditorFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         applyTheme()
-        viewModel.refreshSavedShortcuts()
     }
 
     override fun onDestroyView() {
@@ -139,16 +200,12 @@ class ShortcutEditorFragment : Fragment() {
                 }
                 launch {
                     viewModel.workingExamples.collect { examples ->
-                        exampleAdapter.submitList(examples)
+                        val manuals = examples.filter { it.sourceType == ExampleSourceType.MANUAL }
+                        val autos = examples.filter { it.sourceType == ExampleSourceType.AUTO }
+                        manualAdapter.submitList(manuals)
+                        autoAdapter.submitList(autos)
                         binding.exampleCountText.text =
                             getString(R.string.example_count_format, examples.size)
-                    }
-                }
-                launch {
-                    viewModel.savedShortcuts.collect { list ->
-                        savedShortcutAdapter.submitList(list)
-                        binding.savedShortcutsRecyclerView.visibility =
-                            if (list.isEmpty()) View.GONE else View.VISIBLE
                     }
                 }
                 launch {
@@ -194,6 +251,7 @@ class ShortcutEditorFragment : Fragment() {
     }
 
     private fun updateGenerateSelection() {
+        val theme = ShortcutApplication.from(requireContext()).themeStore.currentTheme()
         val buttons = listOf(
             binding.generateOneButton to 1,
             binding.generateThreeButton to 3,
@@ -201,6 +259,10 @@ class ShortcutEditorFragment : Fragment() {
         )
         buttons.forEach { (button, count) ->
             button.isChecked = count == selectedGenerateCount
+            val bgColor = if (count == selectedGenerateCount) theme.accentColor else theme.keyBackground
+            button.backgroundTintList = ColorStateList.valueOf(bgColor)
+            button.strokeColor = ColorStateList.valueOf(theme.strokeColor)
+            button.setTextColor(if (count == selectedGenerateCount) theme.appBackground else theme.textPrimary)
         }
     }
 
@@ -215,16 +277,14 @@ class ShortcutEditorFragment : Fragment() {
         binding.previewTitle.setTextColor(theme.textPrimary)
         binding.previewStatus.setTextColor(theme.textSecondary)
         binding.helperText.setTextColor(theme.textSecondary)
-        binding.savedShortcutsTitle.setTextColor(theme.textPrimary)
         binding.colemakPreview.applyTheme(theme)
         applyBodyTextTheme(binding.examplesTitle, theme, emphasize = true)
         applyBodyTextTheme(binding.exampleCountText, theme)
+        binding.manualCollapseToggle.setTextColor(theme.textSecondary)
         applyFilledButtonTheme(binding.addExampleButton, theme)
-        applyFilledButtonTheme(binding.generateOneButton, theme)
-        applyFilledButtonTheme(binding.generateThreeButton, theme)
-        applyFilledButtonTheme(binding.generateFiveButton, theme)
         applyFilledButtonTheme(binding.generateExamplesButton, theme)
         applyFilledButtonTheme(binding.saveButton, theme)
+        updateGenerateSelection()
     }
 
     private fun schedulePreview(raw: String) {
@@ -302,24 +362,6 @@ class ShortcutEditorFragment : Fragment() {
                     .show()
             }
         }
-    }
-
-    private fun openExistingShortcut(shortcutId: String) {
-        if (viewModel.shortcutId == shortcutId) return
-        val action = ShortcutEditorFragmentDirections
-            .actionShortcutEditorSelf(viewModel.folderId, shortcutId)
-        findNavController().navigate(action)
-    }
-
-    private fun confirmDeleteExisting(entry: ShortcutEntry) {
-        AlertDialog.Builder(requireContext())
-            .setTitle(getString(R.string.dialog_delete_shortcut_title))
-            .setMessage(getString(R.string.dialog_delete_shortcut_message, entry.shortcut))
-            .setPositiveButton(R.string.action_delete) { _, _ ->
-                viewModel.deleteShortcut(entry.id)
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
     }
 
     private fun showEventSnackbar(event: ShortcutEditorViewModel.EditorEvent) {

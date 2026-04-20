@@ -151,4 +151,7 @@
     <string name="snack_action_retry">재시도</string>
     <string name="snack_action_settings">설정</string>
     <string name="snack_action_change_cap">한도 변경</string>
+    <string name="action_short">short</string>
+    <string name="action_expand">expand</string>
+    <string name="label_translate_on">번역 on</string>
 </resources>
