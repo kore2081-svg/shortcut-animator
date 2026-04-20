@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.kore2.shortcutime.data.ExampleItem
+import com.kore2.shortcutime.data.KeyboardThemePalette
 import com.kore2.shortcutime.data.KeyboardThemeStore
 import com.kore2.shortcutime.databinding.ItemExampleAutoBinding
 
@@ -56,6 +57,100 @@ class AutoExampleAdapter(
 
     override fun getItemCount(): Int = items.size
 
+    // ---------------------------------------------------------------------------
+    // Short-mode text building
+    // ---------------------------------------------------------------------------
+
+    /**
+     * Finds the character range [start, end) in [original] that best matches [expandsTo].
+     *
+     * Strategy:
+     * 1. Exact case-insensitive match (handles normal cases and newly generated examples).
+     * 2. Word-sequence sliding-window match with a 65% threshold.
+     *    This handles LLM paraphrasing where contractions get expanded
+     *    (e.g., "would've" → "would have") — the surrounding words still match.
+     */
+    private fun findReplacementRange(original: String, expandsTo: String): Pair<Int, Int>? {
+        // 1. Exact match
+        val exactIdx = original.indexOf(expandsTo, ignoreCase = true)
+        if (exactIdx >= 0) return exactIdx to exactIdx + expandsTo.length
+
+        // 2. Word-sequence sliding window
+        val wordRe = Regex("\\b\\w+\\b")
+        val expandWords = wordRe.findAll(expandsTo).map { it.value.lowercase() }.toList()
+        if (expandWords.size < 2) return null
+
+        val origTokens = wordRe.findAll(original).toList()
+        val origWords = origTokens.map { it.value.lowercase() }
+
+        // Minimum consecutive matching words required (at least 65% of expandsTo words, min 2)
+        val minMatch = maxOf(2, (expandWords.size * 0.65).toInt())
+
+        var bestStart = -1
+        var bestEnd = -1
+        var bestScore = 0
+
+        for (i in origWords.indices) {
+            val window = minOf(expandWords.size, origWords.size - i)
+            if (window < minMatch) break
+
+            var score = 0
+            var lastMatchedJ = -1
+            for (j in 0 until window) {
+                if (expandWords[j] == origWords[i + j]) {
+                    score++
+                    lastMatchedJ = j
+                }
+            }
+
+            if (score >= minMatch && score > bestScore) {
+                bestScore = score
+                bestStart = origTokens[i].range.first
+                bestEnd = origTokens[i + lastMatchedJ].range.last + 1
+            }
+        }
+
+        return if (bestStart >= 0) bestStart to bestEnd else null
+    }
+
+    private fun buildShortText(item: ExampleItem, theme: KeyboardThemePalette): SpannableString {
+        val shortcut = getShortcut().trim()
+        val expandsTo = getExpandsTo().trim()
+        val original = item.english.ifBlank { item.korean }
+
+        if (shortcut.isBlank()) return SpannableString(original)
+
+        val range = if (expandsTo.isNotBlank()) findReplacementRange(original, expandsTo) else null
+
+        val result: String
+        val hlStart: Int
+        val hlEnd: Int
+
+        if (range != null) {
+            result = original.substring(0, range.first) + shortcut + original.substring(range.second)
+            hlStart = range.first
+            hlEnd = range.first + shortcut.length
+        } else {
+            // Fallback: prepend [shortcut] to signal no match found
+            result = "[$shortcut] $original"
+            hlStart = 1
+            hlEnd = 1 + shortcut.length
+        }
+
+        val spannable = SpannableString(result)
+        spannable.setSpan(
+            ForegroundColorSpan(theme.accentColor),
+            hlStart.coerceIn(0, result.length),
+            hlEnd.coerceIn(0, result.length),
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE,
+        )
+        return spannable
+    }
+
+    // ---------------------------------------------------------------------------
+    // ViewHolder
+    // ---------------------------------------------------------------------------
+
     inner class ViewHolder(
         private val binding: ItemExampleAutoBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
@@ -70,7 +165,7 @@ class AutoExampleAdapter(
 
             binding.dragHandle.setTextColor(theme.textSecondary)
 
-            // English text in header — maxLines + ellipsize change with collapse state
+            // English text in header: full or truncated depending on collapse state
             val displayText = if (isShort) buildShortText(item, theme) else SpannableString(item.english.ifBlank { item.korean })
             binding.englishText.text = displayText
             binding.englishText.setTextColor(theme.textPrimary)
@@ -96,7 +191,7 @@ class AutoExampleAdapter(
             binding.koreanText.visibility = if (isTranslVisible && item.korean.isNotBlank()) View.VISIBLE else View.GONE
             binding.koreanText.setTextColor(theme.textSecondary)
 
-            // Translate button text
+            // Translate button
             binding.translateButton.text = if (isTranslVisible) "번역 on" else "번역"
             binding.translateButton.setTextColor(theme.accentColor)
 
@@ -126,7 +221,7 @@ class AutoExampleAdapter(
                 } else {
                     translationVisible.add(item.id)
                     if (item.korean.isBlank()) {
-                        onTranslate(item) // async — Korean will show when submitList brings the updated item
+                        onTranslate(item) // async — Korean will appear when submitList brings the updated item
                     }
                     notifyItemChanged(pos)
                 }
@@ -140,34 +235,6 @@ class AutoExampleAdapter(
                 }
                 false
             }
-        }
-
-        private fun buildShortText(item: ExampleItem, theme: com.kore2.shortcutime.data.KeyboardThemePalette): SpannableString {
-            val shortcut = getShortcut().trim()
-            val expandsTo = getExpandsTo().trim()
-            val original = item.english.ifBlank { item.korean }
-
-            val result = if (shortcut.isNotBlank() && expandsTo.isNotBlank() &&
-                original.contains(expandsTo, ignoreCase = true)
-            ) {
-                original.replace(expandsTo, shortcut, ignoreCase = true)
-            } else if (shortcut.isNotBlank()) {
-                "[$shortcut] $original"
-            } else {
-                original
-            }
-
-            val spannable = SpannableString(result)
-            val start = result.indexOf(shortcut)
-            if (shortcut.isNotBlank() && start >= 0) {
-                spannable.setSpan(
-                    ForegroundColorSpan(theme.accentColor),
-                    start,
-                    start + shortcut.length,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE,
-                )
-            }
-            return spannable
         }
     }
 }

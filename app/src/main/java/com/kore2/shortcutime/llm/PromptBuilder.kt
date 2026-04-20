@@ -5,11 +5,13 @@ object PromptBuilder {
         val s = shortcut.replace("\\", "\\\\").replace("\"", "\\\"")
         val e = expansion.replace("\\", "\\\\").replace("\"", "\\\"")
         return """
-            You generate example sentences illustrating the phrase: "$e"
+            You generate example sentences for the text expansion phrase: "$e"
 
             Rules:
-            - Write $count natural example sentences that use this phrase in realistic contexts.
-            - NEVER use the abbreviation "$s" in any sentence. Write the full phrase or a paraphrase only.
+            - Write $count natural example sentences that each contain the EXACT PHRASE "$e" verbatim.
+            - The phrase "$e" must appear in each sentence exactly as written, character for character.
+            - NEVER change, expand, or paraphrase the phrase. Copy it literally into each sentence.
+            - NEVER use the abbreviation "$s" in any sentence.
             - Detect the language of the phrase automatically and write ALL examples in THE SAME LANGUAGE.
 
             Return ONLY a JSON object with no prose, no markdown:
