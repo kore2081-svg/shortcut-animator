@@ -101,8 +101,6 @@ class ShortcutEditorFragment : Fragment() {
             onDelete = { viewModel.deleteExample(it.id) },
             onTranslate = { viewModel.translateExample(it) },
             onStartDrag = { holder -> autoTouchHelper.startDrag(holder) },
-            getShortcut = { binding.shortcutInput.text?.toString().orEmpty().trim() },
-            getExpandsTo = { binding.expandsToInput.text?.toString().orEmpty().trim() },
         )
         autoTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
             ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0

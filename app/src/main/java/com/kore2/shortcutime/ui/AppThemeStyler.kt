@@ -1,6 +1,7 @@
 package com.kore2.shortcutime.ui
 
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.View
 import android.widget.TextView
@@ -21,11 +22,26 @@ internal fun roundedRectDrawable(fillColor: Int, strokeColor: Int, radiusDp: Flo
     }
 }
 
+/** Returns true when [color] is dark enough that white text reads more clearly on it. */
+private fun isColorDark(color: Int): Boolean {
+    // Relative luminance per WCAG 2.1
+    fun linearize(c: Int): Double {
+        val s = c / 255.0
+        return if (s <= 0.04045) s / 12.92 else Math.pow((s + 0.055) / 1.055, 2.4)
+    }
+    val l = 0.2126 * linearize(Color.red(color)) +
+        0.7152 * linearize(Color.green(color)) +
+        0.0722 * linearize(Color.blue(color))
+    return l < 0.35
+}
+
 internal fun applyToolbarTheme(toolbar: MaterialToolbar, theme: KeyboardThemePalette) {
     toolbar.setBackgroundColor(theme.previewBackground)
-    toolbar.setTitleTextColor(theme.textPrimary)
-    toolbar.navigationIcon?.setTint(theme.textPrimary)
-    toolbar.overflowIcon?.setTint(theme.textPrimary)
+    // Use white text on dark backgrounds so navigation icons and titles stay legible
+    val textColor = if (isColorDark(theme.previewBackground)) Color.WHITE else theme.textPrimary
+    toolbar.setTitleTextColor(textColor)
+    toolbar.navigationIcon?.setTint(textColor)
+    toolbar.overflowIcon?.setTint(textColor)
 }
 
 internal fun applyFilledButtonTheme(button: MaterialButton, theme: KeyboardThemePalette) {

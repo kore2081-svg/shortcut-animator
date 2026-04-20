@@ -11,6 +11,7 @@ import android.os.Looper
 import android.util.AttributeSet
 import android.view.View
 import com.kore2.shortcutime.data.KeyboardThemePalette
+import kotlin.math.abs
 import kotlin.math.min
 
 class ColemakPreviewView @JvmOverloads constructor(
@@ -164,13 +165,76 @@ class ColemakPreviewView @JvmOverloads constructor(
         if (showTrail && displayedSequence.size > 1) {
             val points = displayedSequence.mapNotNull { keyRects[it]?.let { rect -> rect.centerX() to rect.centerY() } }
             if (points.size > 1) {
-                val path = Path().apply {
-                    moveTo(points.first().first, points.first().second)
-                    points.drop(1).forEach { (x, y) -> lineTo(x, y) }
-                }
-                canvas.drawPath(path, arrowPaint)
-                drawArrowHead(canvas, points[points.lastIndex - 1], points.last(), 18f)
+                drawArrowTrail(canvas, points)
             }
+        }
+    }
+
+    // ---------------------------------------------------------------------------
+    // Arrow trail drawing: straight lines for continuing direction,
+    // quadratic-bezier arcs for direction reversals so overlapping segments
+    // are clearly distinguishable (e.g. home-row left→right→left shortcuts).
+    // ---------------------------------------------------------------------------
+
+    private data class Segment(
+        val from: Pair<Float, Float>,
+        val to: Pair<Float, Float>,
+        val control: Pair<Float, Float>?, // null = straight line
+    )
+
+    private fun drawArrowTrail(canvas: Canvas, points: List<Pair<Float, Float>>) {
+        if (points.size < 2) return
+
+        // Build segment list, detecting horizontal reversals
+        // arcSign alternates -1/+1 so consecutive arcs bow in opposite directions
+        // -1 → control point above the midpoint (arc bows up in screen space)
+        // +1 → control point below the midpoint (arc bows down)
+        var arcSign = -1
+        val segments = mutableListOf<Segment>()
+
+        for (i in 0 until points.size - 1) {
+            val from = points[i]
+            val to = points[i + 1]
+            val currDx = to.first - from.first
+
+            val isReversal = if (i > 0) {
+                val prevDx = points[i].first - points[i - 1].first
+                // Direction changed AND both segments have meaningful horizontal extent
+                currDx * prevDx < 0 && abs(currDx) > 2f && abs(prevDx) > 2f
+            } else false
+
+            if (isReversal) {
+                val midX = (from.first + to.first) / 2f
+                val midY = (from.second + to.second) / 2f
+                // Arc height proportional to horizontal span so longer spans bow more
+                val arcHeight = abs(to.first - from.first) * 0.50f
+                val controlY = midY + arcHeight * arcSign
+                segments.add(Segment(from, to, Pair(midX, controlY)))
+                arcSign *= -1
+            } else {
+                segments.add(Segment(from, to, null))
+            }
+        }
+
+        // Draw all segments
+        for (seg in segments) {
+            val path = Path()
+            path.moveTo(seg.from.first, seg.from.second)
+            if (seg.control != null) {
+                path.quadTo(seg.control.first, seg.control.second, seg.to.first, seg.to.second)
+            } else {
+                path.lineTo(seg.to.first, seg.to.second)
+            }
+            canvas.drawPath(path, arrowPaint)
+        }
+
+        // Arrow head at the last segment endpoint, tangent to the path
+        val lastSeg = segments.last()
+        if (lastSeg.control != null) {
+            // Tangent of quadratic bezier at t=1: direction = endpoint - controlPoint
+            drawArrowHead(canvas, lastSeg.control, lastSeg.to, 18f)
+        } else {
+            drawArrowHead(canvas, lastSeg.from, lastSeg.to, 18f)
         }
     }
 

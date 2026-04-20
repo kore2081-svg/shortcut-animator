@@ -8,9 +8,7 @@ object PromptBuilder {
             You generate example sentences for the text expansion phrase: "$e"
 
             Rules:
-            - Write $count natural example sentences that each contain the EXACT PHRASE "$e" verbatim.
-            - The phrase "$e" must appear in each sentence exactly as written, character for character.
-            - NEVER change, expand, or paraphrase the phrase. Copy it literally into each sentence.
+            - Write $count natural example sentences that naturally use the meaning of "$e", either verbatim or as a natural paraphrase in context.
             - NEVER use the abbreviation "$s" in any sentence.
             - Detect the language of the phrase automatically and write ALL examples in THE SAME LANGUAGE.
 

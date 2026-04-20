@@ -35,15 +35,6 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/shortToggleButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/action_short"
-            android:textColor="@color/accent_blue"
-            android:textSize="13sp" />
-
-        <TextView
             android:id="@+id/collapseToggle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
