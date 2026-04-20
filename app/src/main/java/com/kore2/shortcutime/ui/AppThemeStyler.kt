@@ -22,9 +22,11 @@ internal fun roundedRectDrawable(fillColor: Int, strokeColor: Int, radiusDp: Flo
     }
 }
 
-/** Returns true when [color] is dark enough that white text reads more clearly on it. */
-private fun isColorDark(color: Int): Boolean {
-    // Relative luminance per WCAG 2.1
+/**
+ * Returns true when [color] is dark enough that white text reads more clearly on it.
+ * Uses WCAG 2.1 relative luminance formula.
+ */
+internal fun isColorDark(color: Int): Boolean {
     fun linearize(c: Int): Double {
         val s = c / 255.0
         return if (s <= 0.04045) s / 12.92 else Math.pow((s + 0.055) / 1.055, 2.4)
@@ -36,12 +38,27 @@ private fun isColorDark(color: Int): Boolean {
 }
 
 internal fun applyToolbarTheme(toolbar: MaterialToolbar, theme: KeyboardThemePalette) {
+    // Override the toolbar background completely.
+    // setBackgroundColor() alone does not remove the XML backgroundTint on MaterialToolbar,
+    // so we null it out explicitly — otherwise the XML bg_panel (#23283C) tint persists.
     toolbar.setBackgroundColor(theme.previewBackground)
-    // Use white text on dark backgrounds so navigation icons and titles stay legible
-    val textColor = if (isColorDark(theme.previewBackground)) Color.WHITE else theme.textPrimary
-    toolbar.setTitleTextColor(textColor)
-    toolbar.navigationIcon?.setTint(textColor)
-    toolbar.overflowIcon?.setTint(textColor)
+    toolbar.backgroundTintList = null
+
+    // Choose a legible text/icon color: white on dark backgrounds, theme primary on light ones.
+    val contentColor = if (isColorDark(theme.previewBackground)) Color.WHITE else theme.textPrimary
+
+    toolbar.setTitleTextColor(contentColor)
+
+    // mutate() gives us a private drawable state so setTint() won't affect other drawables
+    // that share the same constant state. Re-assign so the toolbar picks up the change.
+    toolbar.navigationIcon?.mutate()?.let { icon ->
+        icon.setTint(contentColor)
+        toolbar.navigationIcon = icon
+    }
+    toolbar.overflowIcon?.mutate()?.let { icon ->
+        icon.setTint(contentColor)
+        toolbar.overflowIcon = icon
+    }
 }
 
 internal fun applyFilledButtonTheme(button: MaterialButton, theme: KeyboardThemePalette) {

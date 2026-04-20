@@ -163,7 +163,9 @@ class ColemakPreviewView @JvmOverloads constructor(
         }
 
         if (showTrail && displayedSequence.size > 1) {
-            val points = displayedSequence.mapNotNull { keyRects[it]?.let { rect -> rect.centerX() to rect.centerY() } }
+            val points = displayedSequence.mapNotNull {
+                keyRects[it]?.let { r -> r.centerX() to r.centerY() }
+            }
             if (points.size > 1) {
                 drawArrowTrail(canvas, points)
             }
@@ -171,9 +173,17 @@ class ColemakPreviewView @JvmOverloads constructor(
     }
 
     // ---------------------------------------------------------------------------
-    // Arrow trail drawing: straight lines for continuing direction,
-    // quadratic-bezier arcs for direction reversals so overlapping segments
-    // are clearly distinguishable (e.g. home-row left→right→left shortcuts).
+    // Arrow trail drawing
+    //
+    // At each REVERSAL POINT (point j where horizontal direction changes),
+    // the INCOMING segment (j-1 → j) is drawn as a rainbow arc so that
+    // the turning point is visually clear — e.g. for 'drsn':
+    //   d→r  arc bowing up   (turned at r)
+    //   r→s  straight
+    //   s→n  straight  + final arrowhead at n
+    //
+    // Each arc also gets its own arrowhead at the endpoint (the turning key).
+    // Alternating arcs bow up then down to avoid overlap on multiple reversals.
     // ---------------------------------------------------------------------------
 
     private data class Segment(
@@ -185,56 +195,64 @@ class ColemakPreviewView @JvmOverloads constructor(
     private fun drawArrowTrail(canvas: Canvas, points: List<Pair<Float, Float>>) {
         if (points.size < 2) return
 
-        // Build segment list, detecting horizontal reversals
-        // arcSign alternates -1/+1 so consecutive arcs bow in opposite directions
-        // -1 → control point above the midpoint (arc bows up in screen space)
-        // +1 → control point below the midpoint (arc bows down)
-        var arcSign = -1
-        val segments = mutableListOf<Segment>()
+        // ── Step 1: detect reversal points and mark their INCOMING segments ──
+        // A reversal occurs at point j when the direction of segment (j-1)→j
+        // is opposite to segment j→(j+1). We arc segment j-1 (the one arriving
+        // at the turning point) so that the turning key is visually prominent.
+        // arcSign alternates: -1 = bow upward, +1 = bow downward.
+        val arcSegments = mutableMapOf<Int, Int>() // segment index → arc sign
+        var arcSign = -1 // start by bowing upward (negative Y offset in screen coords)
 
+        for (j in 1 until points.size - 1) {
+            val inDx  = points[j].first - points[j - 1].first // segment j-1
+            val outDx = points[j + 1].first - points[j].first // segment j
+            if (inDx * outDx < 0 && abs(inDx) > 2f && abs(outDx) > 2f) {
+                val segIdx = j - 1 // INCOMING segment gets the arc
+                if (segIdx !in arcSegments) {
+                    arcSegments[segIdx] = arcSign
+                    arcSign *= -1 // alternate bow direction for next reversal
+                }
+            }
+        }
+
+        // ── Step 2: build segment list with control points for arcs ──
+        val segments = mutableListOf<Segment>()
         for (i in 0 until points.size - 1) {
             val from = points[i]
-            val to = points[i + 1]
-            val currDx = to.first - from.first
-
-            val isReversal = if (i > 0) {
-                val prevDx = points[i].first - points[i - 1].first
-                // Direction changed AND both segments have meaningful horizontal extent
-                currDx * prevDx < 0 && abs(currDx) > 2f && abs(prevDx) > 2f
-            } else false
-
-            if (isReversal) {
-                val midX = (from.first + to.first) / 2f
-                val midY = (from.second + to.second) / 2f
-                // Arc height proportional to horizontal span so longer spans bow more
-                val arcHeight = abs(to.first - from.first) * 0.50f
-                val controlY = midY + arcHeight * arcSign
+            val to   = points[i + 1]
+            val sign = arcSegments[i]
+            if (sign != null && abs(to.first - from.first) > 2f) {
+                val midX    = (from.first + to.first) / 2f
+                val midY    = (from.second + to.second) / 2f
+                // Arc height proportional to horizontal span; longer sweeps bow more.
+                // sign < 0 → control point moves up (smaller Y = up in Android).
+                val arcH    = abs(to.first - from.first) * 0.50f
+                val controlY = midY + arcH * sign
                 segments.add(Segment(from, to, Pair(midX, controlY)))
-                arcSign *= -1
             } else {
                 segments.add(Segment(from, to, null))
             }
         }
 
-        // Draw all segments
-        for (seg in segments) {
+        // ── Step 3: draw each segment + arrowheads ──
+        segments.forEachIndexed { idx, seg ->
             val path = Path()
             path.moveTo(seg.from.first, seg.from.second)
+
             if (seg.control != null) {
+                // Quadratic bezier arc
                 path.quadTo(seg.control.first, seg.control.second, seg.to.first, seg.to.second)
+                canvas.drawPath(path, arrowPaint)
+                // Arrowhead at arc endpoint; direction = tangent at t=1 = (endpoint − control)
+                drawArrowHead(canvas, seg.control, seg.to, 18f)
             } else {
                 path.lineTo(seg.to.first, seg.to.second)
+                canvas.drawPath(path, arrowPaint)
+                // Arrowhead only on the final straight segment
+                if (idx == segments.lastIndex) {
+                    drawArrowHead(canvas, seg.from, seg.to, 18f)
+                }
             }
-            canvas.drawPath(path, arrowPaint)
-        }
-
-        // Arrow head at the last segment endpoint, tangent to the path
-        val lastSeg = segments.last()
-        if (lastSeg.control != null) {
-            // Tangent of quadratic bezier at t=1: direction = endpoint - controlPoint
-            drawArrowHead(canvas, lastSeg.control, lastSeg.to, 18f)
-        } else {
-            drawArrowHead(canvas, lastSeg.from, lastSeg.to, 18f)
         }
     }
 
@@ -258,37 +276,34 @@ class ColemakPreviewView @JvmOverloads constructor(
     }
 
     private fun displayLabel(char: Char): String {
-        return if (char.isLetter()) {
-            char.uppercaseChar().toString()
-        } else {
-            char.toString()
-        }
+        return if (char.isLetter()) char.uppercaseChar().toString() else char.toString()
     }
 
-    private fun drawArrowHead(canvas: Canvas, from: Pair<Float, Float>, to: Pair<Float, Float>, size: Float) {
+    private fun drawArrowHead(
+        canvas: Canvas,
+        from: Pair<Float, Float>,
+        to: Pair<Float, Float>,
+        size: Float,
+    ) {
         val angle = kotlin.math.atan2(to.second - from.second, to.first - from.first)
-        val leftAngle = angle - Math.toRadians(150.0).toFloat()
+        val leftAngle  = angle - Math.toRadians(150.0).toFloat()
         val rightAngle = angle + Math.toRadians(150.0).toFloat()
 
         val path = Path().apply {
             moveTo(to.first, to.second)
-            lineTo(
-                to.first + size * kotlin.math.cos(leftAngle),
-                to.second + size * kotlin.math.sin(leftAngle),
-            )
+            lineTo(to.first + size * kotlin.math.cos(leftAngle),
+                   to.second + size * kotlin.math.sin(leftAngle))
             moveTo(to.first, to.second)
-            lineTo(
-                to.first + size * kotlin.math.cos(rightAngle),
-                to.second + size * kotlin.math.sin(rightAngle),
-            )
+            lineTo(to.first + size * kotlin.math.cos(rightAngle),
+                   to.second + size * kotlin.math.sin(rightAngle))
         }
         canvas.drawPath(path, arrowPaint)
     }
 
     companion object {
         private const val COLEMAK_KEYS = "qwfpgjluy;arstdhneio'zxcvbkm,./"
-        private const val KEY_LIT_MS = 700L
-        private const val KEY_GAP_MS = 150L
+        private const val KEY_LIT_MS   = 700L
+        private const val KEY_GAP_MS   = 150L
         private const val FINAL_PAUSE_MS = 400L
     }
 }
