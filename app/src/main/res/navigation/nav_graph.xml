@@ -84,6 +84,9 @@
         <action
             android:id="@+id/action_settings_to_llmSettings"
             app:destination="@id/llmSettingsFragment" />
+        <action
+            android:id="@+id/action_settings_to_proUpgrade"
+            app:destination="@id/proUpgradeFragment" />
     </fragment>
 
     <fragment
@@ -93,8 +96,15 @@
         tools:layout="@layout/fragment_llm_settings"
         xmlns:tools="http://schemas.android.com/tools" />
 
-    <!-- Temporary placeholder — will be replaced in Task 6 with ProUpgradeFragment destination -->
+    <fragment
+        android:id="@+id/proUpgradeFragment"
+        android:name="com.kore2.shortcutime.ui.pro.ProUpgradeFragment"
+        android:label="ProUpgrade"
+        tools:layout="@layout/fragment_pro_upgrade"
+        xmlns:tools="http://schemas.android.com/tools" />
+
     <action
         android:id="@+id/action_global_to_proUpgrade"
-        app:destination="@id/folderListFragment" />
+        app:destination="@id/proUpgradeFragment" />
+
 </navigation>

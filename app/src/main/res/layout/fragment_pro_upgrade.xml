@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/topToolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp" />
+
+        <!-- Hero 영역 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="28dp"
+            android:paddingBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="✦"
+                android:textSize="36sp" />
+
+            <TextView
+                android:id="@+id/heroTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/pro_hero_title"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:layout_marginTop="6dp" />
+
+            <TextView
+                android:id="@+id/heroSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/pro_hero_subtitle"
+                android:textSize="13sp"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <!-- 비교표 (dynamically built in Fragment code) -->
+        <LinearLayout
+            android:id="@+id/comparisonTable"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="8dp" />
+
+        <!-- 가격 + 구매 버튼 영역 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/priceLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/pro_price_label"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/priceText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/pro_price"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="16dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/purchaseButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/pro_cta"
+                android:textSize="15sp" />
+
+        </LinearLayout>
+
+        <!-- 이미 Pro인 경우 표시 -->
+        <TextView
+            android:id="@+id/alreadyProText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/pro_already_active"
+            android:textSize="15sp"
+            android:gravity="center"
+            android:layout_marginTop="8dp"
+            android:visibility="gone" />
+
+        <!-- 복원 + 약관 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="20dp">
+
+            <TextView
+                android:id="@+id/restoreButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/pro_restore"
+                android:textSize="13sp"
+                android:padding="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="구매 시 Google Play 이용약관에 동의합니다."
+                android:textSize="11sp"
+                android:layout_marginTop="8dp"
+                android:gravity="center" />
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
