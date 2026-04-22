@@ -9,7 +9,6 @@ import com.revenuecat.purchases.PurchasesTransactionException
 import com.revenuecat.purchases.awaitOfferings
 import com.revenuecat.purchases.awaitPurchase
 import com.revenuecat.purchases.awaitRestore
-import java.util.Calendar
 
 class EntitlementManager(context: Context) {
 
@@ -22,6 +21,9 @@ class EntitlementManager(context: Context) {
      */
     fun isPro(): Boolean = prefs.getBoolean(KEY_IS_PRO, false)
 
+    // Pro is a one-time lifetime purchase — no expiry, no subscription.
+    // updateProCache(false) is intentionally absent: once purchased, always Pro.
+    // If subscription products are ever added, add syncProStatus() to refresh on foreground.
     private fun updateProCache(isPro: Boolean) {
         prefs.edit().putBoolean(KEY_IS_PRO, isPro).apply()
     }
@@ -33,7 +35,8 @@ class EntitlementManager(context: Context) {
     suspend fun purchase(activity: Activity): PurchaseResult {
         return try {
             val offerings = Purchases.sharedInstance.awaitOfferings()
-            val pkg = offerings.current?.availablePackages?.firstOrNull()
+            val pkg = offerings.current?.availablePackages
+                ?.firstOrNull { it.product.id == BillingConstants.PRODUCT_ID }
                 ?: return PurchaseResult.Error("구매 가능한 상품이 없습니다")
             Purchases.sharedInstance.awaitPurchase(
                 PurchaseParams.Builder(activity, pkg).build()
@@ -48,6 +51,8 @@ class EntitlementManager(context: Context) {
             }
         } catch (e: PurchasesException) {
             PurchaseResult.Error(e.error.message ?: "구매 중 오류")
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             PurchaseResult.Error(e.message ?: "알 수 없는 오류")
         }
@@ -64,6 +69,8 @@ class EntitlementManager(context: Context) {
             }
         } catch (e: PurchasesException) {
             RestoreResult.Error(e.error.message ?: "복원 중 오류")
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             RestoreResult.Error(e.message ?: "복원 중 오류")
         }
@@ -80,6 +87,7 @@ class EntitlementManager(context: Context) {
         }
     }
 
+    @Synchronized
     fun incrementMonthlyAiUsage() {
         val currentMonth = currentYearMonth()
         val storedMonth = prefs.getString(KEY_AI_MONTH, "") ?: ""
@@ -90,10 +98,7 @@ class EntitlementManager(context: Context) {
             .apply()
     }
 
-    private fun currentYearMonth(): String {
-        val cal = Calendar.getInstance()
-        return "${cal.get(Calendar.YEAR)}-${cal.get(Calendar.MONTH)}"
-    }
+    private fun currentYearMonth(): String = java.time.YearMonth.now().toString()
 
     sealed class PurchaseResult {
         object Success : PurchaseResult()
