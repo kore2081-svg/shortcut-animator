@@ -10,6 +10,7 @@ import com.kore2.shortcutime.R
 import com.kore2.shortcutime.ShortcutApplication
 import com.kore2.shortcutime.databinding.FragmentSettingsBinding
 import com.kore2.shortcutime.ui.applyToolbarTheme
+import com.kore2.shortcutime.ui.applyFilledButtonTheme
 
 class SettingsFragment : Fragment() {
     private var _binding: FragmentSettingsBinding? = null
@@ -31,6 +32,9 @@ class SettingsFragment : Fragment() {
         binding.aiSettingsButton.setOnClickListener {
             findNavController().navigate(R.id.action_settings_to_llmSettings)
         }
+        binding.proUpgradeButton.setOnClickListener {
+            findNavController().navigate(R.id.action_settings_to_proUpgrade)
+        }
     }
 
     override fun onResume() {
@@ -48,5 +52,6 @@ class SettingsFragment : Fragment() {
         binding.root.setBackgroundColor(theme.appBackground)
         applyToolbarTheme(binding.topToolbar, theme)
         binding.placeholderText.setTextColor(theme.textSecondary)
+        applyFilledButtonTheme(binding.proUpgradeButton, theme)
     }
 }
