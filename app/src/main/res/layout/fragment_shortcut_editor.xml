@@ -207,11 +207,13 @@
             android:layout_marginTop="10dp"
             android:nestedScrollingEnabled="false" />
 
-        <!-- example count + CSV FAB on the same row -->
+        <!-- example count + CSV FAB on the same row
+             marginBottom = mini FAB radius (20dp) so it clears the navigation bar -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
+            android:layout_marginBottom="20dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 

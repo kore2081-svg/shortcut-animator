@@ -208,11 +208,9 @@ class ProUpgradeFragment : Fragment() {
             }
         }
 
-        // PRO column data rows: bright background box + contrasting text
-        val proCellBg = if (!isHeader) proColor else null
-        val proTextColor = if (proCellBg != null) {
-            if (isColorDark(proCellBg)) Color.WHITE else Color.parseColor("#263247")
-        } else proColor
+        // PRO column (header + data rows): background box + contrasting text
+        val proCellBg = proColor
+        val proTextColor = if (isColorDark(proCellBg)) Color.WHITE else Color.parseColor("#263247")
 
         row.addView(cell(label, labelColor, 1.4f))
         row.addView(cell(freeVal, freeColor, 1f, Gravity.CENTER_HORIZONTAL))
