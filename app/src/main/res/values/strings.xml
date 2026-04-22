@@ -152,4 +152,7 @@
     <string name="snack_action_settings">설정</string>
     <string name="snack_action_change_cap">한도 변경</string>
     <string name="label_translate_on">번역 on</string>
+    <string name="action_export_csv">CSV로 내보내기</string>
+    <string name="toast_csv_saved">CSV 저장 완료</string>
+    <string name="toast_csv_error">CSV 저장 실패</string>
 </resources>

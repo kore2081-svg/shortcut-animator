@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -16,6 +17,7 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.kore2.shortcutime.R
 import com.kore2.shortcutime.ShortcutApplication
+import com.kore2.shortcutime.data.FolderItem
 import com.kore2.shortcutime.data.ShortcutEntry
 import com.kore2.shortcutime.databinding.FragmentFolderDetailBinding
 import com.kore2.shortcutime.ui.ShortcutEntryAdapter
@@ -34,6 +36,24 @@ class FolderDetailFragment : Fragment() {
     }
 
     private lateinit var adapter: ShortcutEntryAdapter
+
+    // ── CSV export: opens system file-picker, no permission needed ──────────
+    private val createCsvLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("text/csv"),
+    ) { uri ->
+        uri ?: return@registerForActivityResult
+        val state = viewModel.state.value as? FolderDetailState.Loaded ?: return@registerForActivityResult
+        try {
+            requireContext().contentResolver.openOutputStream(uri)?.use { os ->
+                // UTF-8 BOM so Excel opens Korean characters correctly
+                os.write(byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()))
+                os.write(buildCsvContent(state.folder).toByteArray(Charsets.UTF_8))
+            }
+            Toast.makeText(requireContext(), R.string.toast_csv_saved, Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), R.string.toast_csv_error, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -56,7 +76,17 @@ class FolderDetailFragment : Fragment() {
 
         binding.topToolbar.setNavigationIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material)
         binding.topToolbar.setNavigationOnClickListener { findNavController().popBackStack() }
+
         binding.addShortcutFab.setOnClickListener { openShortcutEditor(null) }
+
+        binding.exportCsvFab.setOnClickListener {
+            val state = viewModel.state.value as? FolderDetailState.Loaded ?: return@setOnClickListener
+            val safeName = state.folder.title
+                .replace(Regex("[^\\w가-힣\\s-]"), "")
+                .trim()
+                .ifBlank { "shortcuts" }
+            createCsvLauncher.launch("${safeName}_shortcuts.csv")
+        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -107,6 +137,7 @@ class FolderDetailFragment : Fragment() {
         binding.folderHeaderText.setTextColor(theme.textSecondary)
         binding.emptyStateText.setTextColor(theme.textSecondary)
         applyFabTheme(binding.addShortcutFab, theme)
+        applyFabTheme(binding.exportCsvFab, theme)
     }
 
     private fun openShortcutEditor(shortcutId: String?) {
@@ -124,5 +155,34 @@ class FolderDetailFragment : Fragment() {
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
+    }
+
+    // ── CSV content builder ──────────────────────────────────────────────────
+    private fun buildCsvContent(folder: FolderItem): String {
+        return buildString {
+            // Header metadata
+            append("# Folder: ${folder.title}\r\n")
+            append("# Total shortcuts: ${folder.shortcuts.size}\r\n")
+            append("\r\n")
+            // Column headers
+            append("shortcut,expands_to,usage_count,example_count,examples_en,examples_ko\r\n")
+            // Data rows
+            folder.shortcuts.sortedBy { it.shortcut.lowercase() }.forEach { entry ->
+                val examplesEn = entry.examples.joinToString(" | ") { it.english }
+                val examplesKo = entry.examples.joinToString(" | ") { it.korean }
+                append("${csvCell(entry.shortcut)},")
+                append("${csvCell(entry.expandsTo)},")
+                append("${entry.usageCount},")
+                append("${entry.examples.size},")
+                append("${csvCell(examplesEn)},")
+                append("${csvCell(examplesKo)}\r\n")
+            }
+        }
+    }
+
+    /** Wraps [value] in double-quotes and escapes any internal double-quotes. */
+    private fun csvCell(value: String): String {
+        val escaped = value.replace("\"", "\"\"")
+        return "\"$escaped\""
     }
 }
