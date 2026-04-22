@@ -2,12 +2,10 @@ package com.kore2.shortcutime.billing
 
 import android.app.Activity
 import android.content.Context
-import com.revenuecat.purchases.CacheFetchPolicy
 import com.revenuecat.purchases.PurchaseParams
 import com.revenuecat.purchases.Purchases
 import com.revenuecat.purchases.PurchasesException
 import com.revenuecat.purchases.PurchasesTransactionException
-import com.revenuecat.purchases.awaitCustomerInfo
 import com.revenuecat.purchases.awaitOfferings
 import com.revenuecat.purchases.awaitPurchase
 import com.revenuecat.purchases.awaitRestore
@@ -18,17 +16,14 @@ class EntitlementManager(context: Context) {
     private val prefs = context.getSharedPreferences("entitlement_prefs", Context.MODE_PRIVATE)
 
     /**
-     * Suspend function that returns whether the user is Pro using the RC cache only.
-     * Uses CacheFetchPolicy.CACHE_ONLY — no network call is made.
-     * Safe to call after Purchases.configure().
+     * Synchronous check of Pro status from the local SharedPreferences cache.
+     * Updated after every successful purchase or restore.
+     * Safe to call from any click listener — no coroutine needed.
      */
-    suspend fun isPro(): Boolean = try {
-        Purchases.sharedInstance
-            .awaitCustomerInfo(CacheFetchPolicy.CACHE_ONLY)
-            .entitlements[BillingConstants.ENTITLEMENT_ID]
-            ?.isActive == true
-    } catch (_: Exception) {
-        false
+    fun isPro(): Boolean = prefs.getBoolean(KEY_IS_PRO, false)
+
+    private fun updateProCache(isPro: Boolean) {
+        prefs.edit().putBoolean(KEY_IS_PRO, isPro).apply()
     }
 
     /**
@@ -43,6 +38,7 @@ class EntitlementManager(context: Context) {
             Purchases.sharedInstance.awaitPurchase(
                 PurchaseParams.Builder(activity, pkg).build()
             )
+            updateProCache(true)
             PurchaseResult.Success
         } catch (e: PurchasesTransactionException) {
             if (e.userCancelled) {
@@ -61,6 +57,7 @@ class EntitlementManager(context: Context) {
         return try {
             val customerInfo = Purchases.sharedInstance.awaitRestore()
             if (customerInfo.entitlements[BillingConstants.ENTITLEMENT_ID]?.isActive == true) {
+                updateProCache(true)
                 RestoreResult.Restored
             } else {
                 RestoreResult.NothingToRestore
@@ -111,6 +108,7 @@ class EntitlementManager(context: Context) {
     }
 
     companion object {
+        private const val KEY_IS_PRO = "is_pro"
         private const val KEY_AI_MONTH = "ai_usage_month"
         private const val KEY_AI_COUNT = "ai_usage_count"
     }
