@@ -47,7 +47,7 @@ class FolderAdapter(
             }
             binding.folderCount.setTextColor(theme.textSecondary)
             binding.folderNote.setTextColor(theme.textSecondary)
-            binding.openButton.setTextColor(theme.accentColor)
+            binding.openButton.setTextColor(theme.textPrimary)
             binding.root.setOnClickListener { openAction() }
             binding.folderContentArea.setOnClickListener { openAction() }
             binding.openButton.setOnClickListener { openAction() }

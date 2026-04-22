@@ -58,19 +58,16 @@
             android:fadeScrollbars="true" />
     </LinearLayout>
 
-    <!-- CSV export button — sits at top-right, vertically centred with the toolbar.
-         marginTop = toolbar.marginTop(20) + (toolbar.height≈56 - fab.size≈40)/2 ≈ 28dp
-         marginEnd matches toolbar's marginEnd so edges align. -->
+    <!-- CSV export button — bottom-left, symmetric with addShortcutFab on the right -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/exportCsvFab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="top|end"
-        android:layout_marginTop="28dp"
-        android:layout_marginEnd="16dp"
+        android:layout_gravity="bottom|start"
+        android:layout_marginStart="20dp"
+        android:layout_marginBottom="76dp"
         android:contentDescription="@string/action_export_csv"
-        android:src="@android:drawable/ic_menu_save"
-        app:fabSize="mini" />
+        android:src="@android:drawable/ic_menu_save" />
 
     <!-- Add new shortcut button — bottom-right -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton

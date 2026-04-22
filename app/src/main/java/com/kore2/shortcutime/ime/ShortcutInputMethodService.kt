@@ -301,8 +301,8 @@ class ShortcutInputMethodService : InputMethodService() {
             button.setTextColor(theme.textPrimary)
         }
 
-        themeToggleButton.background = circleDrawable(theme.accentColor, theme.strokeColor)
-        themeToggleButton.setTextColor(theme.appBackground)
+        themeToggleButton.background = circleDrawable(theme.keyBackground, theme.strokeColor)
+        themeToggleButton.setTextColor(theme.textPrimary)
         renderCandidates(currentCandidates)
         updateThemeOptionsVisibility()
     }

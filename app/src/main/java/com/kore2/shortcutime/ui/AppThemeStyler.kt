@@ -70,7 +70,9 @@ internal fun applyFilledButtonTheme(button: MaterialButton, theme: KeyboardTheme
 
 internal fun applyFabTheme(fab: FloatingActionButton, theme: KeyboardThemePalette) {
     fab.backgroundTintList = ColorStateList.valueOf(theme.accentColor)
-    fab.imageTintList = ColorStateList.valueOf(theme.appBackground)
+    // Choose white icon on dark FAB background, dark icon on light FAB background
+    val iconColor = if (isColorDark(theme.accentColor)) Color.WHITE else Color.parseColor("#263247")
+    fab.imageTintList = ColorStateList.valueOf(iconColor)
 }
 
 internal fun applyInputLayoutTheme(

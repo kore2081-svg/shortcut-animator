@@ -34,6 +34,7 @@ import com.kore2.shortcutime.databinding.FragmentShortcutEditorBinding
 import com.kore2.shortcutime.ui.AutoExampleAdapter
 import com.kore2.shortcutime.ui.ManualExampleAdapter
 import com.kore2.shortcutime.ui.applyBodyTextTheme
+import com.kore2.shortcutime.ui.applyFabTheme
 import com.kore2.shortcutime.ui.applyFilledButtonTheme
 import com.kore2.shortcutime.ui.applyInputLayoutTheme
 import com.kore2.shortcutime.ui.applyToolbarTheme
@@ -319,7 +320,7 @@ class ShortcutEditorFragment : Fragment() {
         applyFilledButtonTheme(binding.addExampleButton, theme)
         applyFilledButtonTheme(binding.generateExamplesButton, theme)
         applyFilledButtonTheme(binding.saveButton, theme)
-        applyFilledButtonTheme(binding.exportCsvButton, theme)
+        applyFabTheme(binding.exportCsvButton, theme)
         updateGenerateSelection()
     }
 

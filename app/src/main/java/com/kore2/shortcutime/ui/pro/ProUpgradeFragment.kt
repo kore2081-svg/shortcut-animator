@@ -1,6 +1,8 @@
 package com.kore2.shortcutime.ui.pro
 
+import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -18,6 +20,7 @@ import com.kore2.shortcutime.billing.EntitlementManager
 import com.kore2.shortcutime.databinding.FragmentProUpgradeBinding
 import com.kore2.shortcutime.ui.applyFilledButtonTheme
 import com.kore2.shortcutime.ui.applyToolbarTheme
+import com.kore2.shortcutime.ui.isColorDark
 import kotlinx.coroutines.launch
 
 class ProUpgradeFragment : Fragment() {
@@ -182,24 +185,38 @@ class ProUpgradeFragment : Fragment() {
             )
         }
 
-        fun cell(text: String, color: Int, weight: Float, align: Int = Gravity.START): TextView {
+        fun cell(text: String, color: Int, weight: Float, align: Int = Gravity.START, cellBg: Int? = null): TextView {
             return TextView(requireContext()).apply {
                 this.text = text
                 textSize = if (isHeader) 11f else 12f
                 setTextColor(color)
                 if (isHeader) setTypeface(typeface, Typeface.BOLD)
                 gravity = align or Gravity.CENTER_VERTICAL
+                if (cellBg != null) {
+                    background = GradientDrawable().apply {
+                        shape = GradientDrawable.RECTANGLE
+                        cornerRadius = 6 * density
+                        setColor(cellBg)
+                    }
+                }
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, weight).apply {
                     val padH = (12 * density).toInt()
                     val padV = (10 * density).toInt()
                     setPadding(padH, padV, padH, padV)
+                    if (cellBg != null) setMargins(4, 4, 4, 4)
                 }
             }
         }
 
+        // PRO column data rows: bright background box + contrasting text
+        val proCellBg = if (!isHeader) proColor else null
+        val proTextColor = if (proCellBg != null) {
+            if (isColorDark(proCellBg)) Color.WHITE else Color.parseColor("#263247")
+        } else proColor
+
         row.addView(cell(label, labelColor, 1.4f))
         row.addView(cell(freeVal, freeColor, 1f, Gravity.CENTER_HORIZONTAL))
-        row.addView(cell(proVal, proColor, 1f, Gravity.CENTER_HORIZONTAL))
+        row.addView(cell(proVal, proTextColor, 1f, Gravity.CENTER_HORIZONTAL, proCellBg))
         return row
     }
 
@@ -209,10 +226,10 @@ class ProUpgradeFragment : Fragment() {
         val theme = ShortcutApplication.from(requireContext()).themeStore.currentTheme()
         binding.root.setBackgroundColor(theme.appBackground)
         applyToolbarTheme(binding.topToolbar, theme)
-        binding.heroTitle.setTextColor(theme.accentColor)
+        binding.heroTitle.setTextColor(theme.textPrimary)
         binding.heroSubtitle.setTextColor(theme.textSecondary)
         binding.priceLabel.setTextColor(theme.textSecondary)
-        binding.priceText.setTextColor(theme.accentColor)
+        binding.priceText.setTextColor(theme.textPrimary)
         binding.comparisonTable.setBackgroundColor(theme.previewBackground)
         binding.restoreButton.setTextColor(theme.textSecondary)
         applyFilledButtonTheme(binding.purchaseButton, theme)

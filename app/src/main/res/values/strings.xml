@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Shortcut IME Colemak</string>
-    <string name="ime_name">Shortcut IME Colemak</string>
+    <string name="app_name">Colemak Shortcut Traction</string>
+    <string name="ime_name">Colemak Shortcut Traction</string>
     <string name="ime_subtype_label">English Shortcut Keyboard</string>
     <string name="title_manage_shortcuts">Shortcut Animator</string>
     <string name="label_shortcut">Shortcut</string>
@@ -168,7 +168,7 @@
     <string name="limit_csv_message">CSV 내보내기는 Pro 전용 기능이에요.\nPro로 업그레이드하면 사용할 수 있어요.</string>
     <string name="pro_see_upgrade">Pro 보기</string>
     <string name="pro_upgrade_title">Pro 업그레이드</string>
-    <string name="pro_hero_title">Shortcut IME Pro</string>
+    <string name="pro_hero_title">Colemak Shortcut Traction</string>
     <string name="pro_hero_subtitle">단 한 번의 결제로 평생 이용</string>
     <string name="pro_price">₩5,900</string>
     <string name="pro_price_label">평생 이용권 · 일회성 결제</string>
