@@ -2,7 +2,7 @@ package com.kore2.shortcutime.billing
 
 object BillingConstants {
     /** RevenueCat 대시보드 → API Keys → Public SDK Key */
-    const val REVENUECAT_API_KEY = "test_dHHyPfUhJXHJgrOYwnhZszSWnxT"
+    const val REVENUECAT_API_KEY = "test_ytrcnbydSALCkCUIvpIhVkbeSqn"
 
     /** Google Play Console에 등록한 인앱 상품 ID */
     const val PRODUCT_ID = "pro_lifetime"
