@@ -14,6 +14,9 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.kore2.shortcutime.R
 import com.kore2.shortcutime.ShortcutApplication
+import com.kore2.shortcutime.billing.BillingConstants
+import com.kore2.shortcutime.billing.LimitReason
+import com.kore2.shortcutime.billing.showLimitDialog
 import com.kore2.shortcutime.data.FolderItem
 import com.kore2.shortcutime.databinding.FragmentFolderListBinding
 import com.kore2.shortcutime.ui.FolderAdapter
@@ -51,7 +54,14 @@ class FolderListFragment : Fragment() {
         binding.folderRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.folderRecyclerView.adapter = adapter
 
-        binding.addFolderFab.setOnClickListener { openFolderEditor(null) }
+        binding.addFolderFab.setOnClickListener {
+            val em = ShortcutApplication.from(requireContext()).entitlementManager
+            if (!em.isPro() && viewModel.folders.value.size >= BillingConstants.FREE_MAX_FOLDERS) {
+                showLimitDialog(LimitReason.FOLDER)
+            } else {
+                openFolderEditor(null)
+            }
+        }
         binding.settingsFab.setOnClickListener { openSettings() }
 
         viewLifecycleOwner.lifecycleScope.launch {
