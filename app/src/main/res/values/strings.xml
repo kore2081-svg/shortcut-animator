@@ -155,6 +155,7 @@
     <string name="action_export_csv">CSV로 내보내기</string>
     <string name="toast_csv_saved">CSV 저장 완료</string>
     <string name="toast_csv_error">CSV 저장 실패</string>
+    <string name="toast_no_examples">예문이 없어요. 먼저 예문을 추가해주세요.</string>
 
     <!-- Phase 3 billing limit dialogs -->
     <string name="limit_folder_title">폴더 한도 도달</string>

@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -60,6 +61,27 @@ class ShortcutEditorFragment : Fragment() {
 
     private val previewHandler = Handler(Looper.getMainLooper())
     private var previewRunnable: Runnable? = null
+
+    // ── CSV export ────────────────────────────────────────────────────────────
+    private var csvShortcutText: String = ""
+    private var csvExpandsToText: String = ""
+
+    private val createCsvLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("text/csv"),
+    ) { uri ->
+        uri ?: return@registerForActivityResult
+        val examples = viewModel.workingExamples.value
+        try {
+            requireContext().contentResolver.openOutputStream(uri)?.use { os ->
+                // UTF-8 BOM — Excel이 한글을 올바르게 열도록
+                os.write(byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()))
+                os.write(buildCsvContent(csvShortcutText, csvExpandsToText, examples).toByteArray(Charsets.UTF_8))
+            }
+            Toast.makeText(requireContext(), R.string.toast_csv_saved, Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), R.string.toast_csv_error, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -167,6 +189,7 @@ class ShortcutEditorFragment : Fragment() {
             viewModel.onGenerateExamplesClicked(shortcut, expansion, selectedGenerateCount)
         }
         binding.saveButton.setOnClickListener { onSaveClick() }
+        binding.exportCsvButton.setOnClickListener { onExportCsvClick() }
         binding.shortcutInput.addTextChangedListener { text ->
             schedulePreview(text?.toString().orEmpty())
         }
@@ -296,6 +319,7 @@ class ShortcutEditorFragment : Fragment() {
         applyFilledButtonTheme(binding.addExampleButton, theme)
         applyFilledButtonTheme(binding.generateExamplesButton, theme)
         applyFilledButtonTheme(binding.saveButton, theme)
+        applyFilledButtonTheme(binding.exportCsvButton, theme)
         updateGenerateSelection()
     }
 
@@ -446,6 +470,48 @@ class ShortcutEditorFragment : Fragment() {
         val shortcut = binding.shortcutInput.text?.toString().orEmpty().trim()
         val expansion = binding.expandsToInput.text?.toString().orEmpty().trim()
         viewModel.onGenerateExamplesClicked(shortcut, expansion, selectedGenerateCount)
+    }
+
+    // ── CSV export helpers ────────────────────────────────────────────────────
+
+    private fun onExportCsvClick() {
+        val em = ShortcutApplication.from(requireContext()).entitlementManager
+        if (!em.isPro()) {
+            showLimitDialog(LimitReason.CSV)
+            return
+        }
+        val examples = viewModel.workingExamples.value
+        if (examples.isEmpty()) {
+            Toast.makeText(requireContext(), R.string.toast_no_examples, Toast.LENGTH_SHORT).show()
+            return
+        }
+        csvShortcutText = binding.shortcutInput.text?.toString().orEmpty().trim()
+        csvExpandsToText = binding.expandsToInput.text?.toString().orEmpty().trim()
+        val fileName = if (csvShortcutText.isNotBlank()) "${csvShortcutText}_examples.csv" else "examples.csv"
+        createCsvLauncher.launch(fileName)
+    }
+
+    private fun buildCsvContent(
+        shortcut: String,
+        expandsTo: String,
+        examples: List<ExampleItem>,
+    ): String = buildString {
+        append("# Shortcut: $shortcut\r\n")
+        append("# Expands To: $expandsTo\r\n")
+        append("# Total examples: ${examples.size}\r\n")
+        append("\r\n")
+        append("type,example_en,example_ko\r\n")
+        examples.forEach { ex ->
+            append("${ex.sourceType.name},")
+            append("${csvCell(ex.english)},")
+            append("${csvCell(ex.korean)}\r\n")
+        }
+    }
+
+    /** Wraps [value] in double-quotes and escapes any internal double-quotes. */
+    private fun csvCell(value: String): String {
+        val escaped = value.replace("\"", "\"\"")
+        return "\"$escaped\""
     }
 
     companion object {
