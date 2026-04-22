@@ -22,6 +22,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.kore2.shortcutime.R
 import com.kore2.shortcutime.ShortcutApplication
+import com.kore2.shortcutime.billing.BillingConstants
+import com.kore2.shortcutime.billing.LimitReason
+import com.kore2.shortcutime.billing.showLimitDialog
 import com.kore2.shortcutime.data.ExampleItem
 import com.kore2.shortcutime.data.ExampleSourceType
 import com.kore2.shortcutime.data.ShortcutEntry
@@ -154,6 +157,11 @@ class ShortcutEditorFragment : Fragment() {
         setupGenerateCountButtons()
         binding.addExampleButton.setOnClickListener { openExampleDialog(null) }
         binding.generateExamplesButton.setOnClickListener {
+            val em = ShortcutApplication.from(requireContext()).entitlementManager
+            if (!em.isPro() && em.getMonthlyAiUsage() >= BillingConstants.FREE_AI_MONTHLY_CAP) {
+                showLimitDialog(LimitReason.AI)
+                return@setOnClickListener
+            }
             val shortcut = binding.shortcutInput.text?.toString().orEmpty().trim()
             val expansion = binding.expandsToInput.text?.toString().orEmpty().trim()
             viewModel.onGenerateExamplesClicked(shortcut, expansion, selectedGenerateCount)
@@ -375,6 +383,9 @@ class ShortcutEditorFragment : Fragment() {
         val actionHandler: (() -> Unit)?
         when (event) {
             is ShortcutEditorViewModel.EditorEvent.GenerateSuccess -> {
+                // Increment monthly AI usage only for free users, only on actual success
+                val em = ShortcutApplication.from(requireContext()).entitlementManager
+                if (!em.isPro()) em.incrementMonthlyAiUsage()
                 msg = getString(R.string.snack_generate_success_format, event.addedCount); actionLabel = null; actionHandler = null
             }
             is ShortcutEditorViewModel.EditorEvent.GeneratePartial -> {
