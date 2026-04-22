@@ -11,10 +11,15 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
+        <!-- Toolbar floats inside the screen: 20dp top gap (= mini-FAB radius),
+             16dp side margins — mirrors the ShortcutEditor's padding="20dp" style -->
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/topToolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
             android:backgroundTint="@color/bg_panel"
             android:titleTextColor="@color/text_primary" />
 
@@ -53,14 +58,16 @@
             android:fadeScrollbars="true" />
     </LinearLayout>
 
-    <!-- CSV export button — top-right, overlaid on toolbar -->
+    <!-- CSV export button — sits at top-right, vertically centred with the toolbar.
+         marginTop = toolbar.marginTop(20) + (toolbar.height≈56 - fab.size≈40)/2 ≈ 28dp
+         marginEnd matches toolbar's marginEnd so edges align. -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/exportCsvFab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="top|end"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginTop="28dp"
+        android:layout_marginEnd="16dp"
         android:contentDescription="@string/action_export_csv"
         android:src="@android:drawable/ic_menu_save"
         app:fabSize="mini" />
