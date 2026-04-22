@@ -52,8 +52,7 @@ class ProUpgradeFragment : Fragment() {
         binding.restoreButton.setOnClickListener {
             lifecycleScope.launch { handleRestore(entitlement) }
         }
-
-        buildComparisonTable()
+        // Note: comparison table and theme are applied in onResume() → applyTheme()
     }
 
     override fun onResume() {
