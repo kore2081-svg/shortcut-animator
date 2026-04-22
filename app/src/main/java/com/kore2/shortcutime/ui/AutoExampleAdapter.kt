@@ -1,5 +1,6 @@
 package com.kore2.shortcutime.ui
 
+import android.annotation.SuppressLint
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -53,6 +54,7 @@ class AutoExampleAdapter(
         private val binding: ItemExampleAutoBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
 
+        @SuppressLint("ClickableViewAccessibility")
         fun bind(item: ExampleItem) {
             val theme = KeyboardThemeStore(binding.root.context).currentTheme()
             binding.root.background = roundedRectDrawable(theme.previewBackground, theme.strokeColor, 16f, binding.root)

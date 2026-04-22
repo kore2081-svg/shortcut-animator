@@ -86,7 +86,10 @@ class ShortcutEditorFragment : Fragment() {
                 vh: RecyclerView.ViewHolder,
                 target: RecyclerView.ViewHolder,
             ): Boolean {
-                manualAdapter.moveItem(vh.bindingAdapterPosition, target.bindingAdapterPosition)
+                val from = vh.bindingAdapterPosition
+                val to = target.bindingAdapterPosition
+                if (from == RecyclerView.NO_POSITION || to == RecyclerView.NO_POSITION) return false
+                manualAdapter.moveItem(from, to)
                 return true
             }
             override fun onSwiped(vh: RecyclerView.ViewHolder, direction: Int) {}
@@ -111,7 +114,10 @@ class ShortcutEditorFragment : Fragment() {
                 vh: RecyclerView.ViewHolder,
                 target: RecyclerView.ViewHolder,
             ): Boolean {
-                autoAdapter.moveItem(vh.bindingAdapterPosition, target.bindingAdapterPosition)
+                val from = vh.bindingAdapterPosition
+                val to = target.bindingAdapterPosition
+                if (from == RecyclerView.NO_POSITION || to == RecyclerView.NO_POSITION) return false
+                autoAdapter.moveItem(from, to)
                 return true
             }
             override fun onSwiped(vh: RecyclerView.ViewHolder, direction: Int) {}
