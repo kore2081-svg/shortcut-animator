@@ -17,6 +17,9 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.kore2.shortcutime.R
 import com.kore2.shortcutime.ShortcutApplication
+import com.kore2.shortcutime.billing.BillingConstants
+import com.kore2.shortcutime.billing.LimitReason
+import com.kore2.shortcutime.billing.showLimitDialog
 import com.kore2.shortcutime.data.FolderItem
 import com.kore2.shortcutime.data.ShortcutEntry
 import com.kore2.shortcutime.databinding.FragmentFolderDetailBinding
@@ -77,9 +80,23 @@ class FolderDetailFragment : Fragment() {
         binding.topToolbar.setNavigationIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material)
         binding.topToolbar.setNavigationOnClickListener { findNavController().popBackStack() }
 
-        binding.addShortcutFab.setOnClickListener { openShortcutEditor(null) }
+        binding.addShortcutFab.setOnClickListener {
+            val em = ShortcutApplication.from(requireContext()).entitlementManager
+            val state = viewModel.state.value as? FolderDetailState.Loaded
+            val shortcutCount = state?.folder?.shortcuts?.size ?: 0
+            if (!em.isPro() && shortcutCount >= BillingConstants.FREE_MAX_SHORTCUTS_PER_FOLDER) {
+                showLimitDialog(LimitReason.SHORTCUT)
+            } else {
+                openShortcutEditor(null)
+            }
+        }
 
         binding.exportCsvFab.setOnClickListener {
+            val em = ShortcutApplication.from(requireContext()).entitlementManager
+            if (!em.isPro()) {
+                showLimitDialog(LimitReason.CSV)
+                return@setOnClickListener
+            }
             val state = viewModel.state.value as? FolderDetailState.Loaded ?: return@setOnClickListener
             val safeName = state.folder.title
                 .replace(Regex("[^\\w가-힣\\s-]"), "")
