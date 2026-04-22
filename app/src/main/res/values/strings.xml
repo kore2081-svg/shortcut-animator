@@ -155,4 +155,15 @@
     <string name="action_export_csv">CSV로 내보내기</string>
     <string name="toast_csv_saved">CSV 저장 완료</string>
     <string name="toast_csv_error">CSV 저장 실패</string>
+
+    <!-- Phase 3 billing limit dialogs -->
+    <string name="limit_folder_title">폴더 한도 도달</string>
+    <string name="limit_folder_message">무료 버전은 폴더를 2개까지 만들 수 있어요.\nPro로 업그레이드하면 제한 없이 사용할 수 있어요.</string>
+    <string name="limit_shortcut_title">Shortcut 한도 도달</string>
+    <string name="limit_shortcut_message">무료 버전은 폴더당 Shortcut을 10개까지 만들 수 있어요.\nPro로 업그레이드하면 제한 없이 사용할 수 있어요.</string>
+    <string name="limit_ai_title">AI 생성 한도 도달</string>
+    <string name="limit_ai_message">무료 버전은 이번 달 AI 예문을 20회까지 생성할 수 있어요.\nPro로 업그레이드하면 제한 없이 사용할 수 있어요.</string>
+    <string name="limit_csv_title">Pro 전용 기능</string>
+    <string name="limit_csv_message">CSV 내보내기는 Pro 전용 기능이에요.\nPro로 업그레이드하면 사용할 수 있어요.</string>
+    <string name="pro_see_upgrade">Pro 보기</string>
 </resources>

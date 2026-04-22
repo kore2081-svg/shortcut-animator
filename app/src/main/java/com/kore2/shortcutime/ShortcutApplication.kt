@@ -2,6 +2,8 @@ package com.kore2.shortcutime
 
 import android.app.Application
 import android.content.Context
+import com.kore2.shortcutime.billing.BillingConstants
+import com.kore2.shortcutime.billing.EntitlementManager
 import com.kore2.shortcutime.data.FolderRepository
 import com.kore2.shortcutime.data.KeyboardThemeStore
 import com.kore2.shortcutime.data.LlmSettingsStore
@@ -10,10 +12,14 @@ import com.kore2.shortcutime.data.SystemClock
 import com.kore2.shortcutime.llm.ExampleGenerationService
 import com.kore2.shortcutime.llm.HttpClientFactory
 import com.kore2.shortcutime.llm.LlmRegistry
+import com.revenuecat.purchases.LogLevel
+import com.revenuecat.purchases.Purchases
+import com.revenuecat.purchases.PurchasesConfiguration
 
 class ShortcutApplication : Application() {
     val repository: FolderRepository by lazy { FolderRepository(applicationContext) }
     val themeStore: KeyboardThemeStore by lazy { KeyboardThemeStore(applicationContext) }
+    val entitlementManager: EntitlementManager by lazy { EntitlementManager(applicationContext) }
 
     val clock by lazy { SystemClock() }
     val secureKeyStore by lazy { SecureKeyStore.create(applicationContext) }
@@ -25,6 +31,13 @@ class ShortcutApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        // RevenueCat must be initialized before entitlementManager is first accessed
+        if (BuildConfig.DEBUG) Purchases.logLevel = LogLevel.DEBUG
+        Purchases.configure(
+            PurchasesConfiguration.Builder(this, BillingConstants.REVENUECAT_API_KEY).build()
+        )
+
         val prefs = getSharedPreferences("crash_diag", Context.MODE_PRIVATE)
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->

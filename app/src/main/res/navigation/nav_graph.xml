@@ -92,4 +92,9 @@
         android:label="LlmSettings"
         tools:layout="@layout/fragment_llm_settings"
         xmlns:tools="http://schemas.android.com/tools" />
+
+    <!-- Temporary placeholder — will be replaced in Task 6 with ProUpgradeFragment destination -->
+    <action
+        android:id="@+id/action_global_to_proUpgrade"
+        app:destination="@id/folderListFragment" />
 </navigation>
